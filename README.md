@@ -4,8 +4,8 @@
 **Tagline:** The AWO toolchain for reproducible, auditable research runs.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](#license)
-[![CI: Validate](https://github.com/OWNER/REPO/actions/workflows/cri-validate.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/cri-validate.yml)
-[![Release](https://github.com/OWNER/REPO/actions/workflows/release.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/release.yml)
+[![CI: Validate](https://github.com/OWNER/REPO/actions/workflows/cri-validate.yml/badge.svg)](https://github.com/Wright-Shawn/cri-core/actions/workflows/cri-validate.yml)
+[![Release](https://github.com/OWNER/REPO/actions/workflows/release.yml/badge.svg)](https://github.com/Wright-Shawn/cri-core/actions/workflows/release.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.xxxxxxxx.svg)](https://doi.org/10.5281/zenodo.xxxxxxxx)
 
 ---
