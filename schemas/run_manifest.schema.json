@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CRI Run Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id","started_at","workflow_path","workflow_sha256","machine_validation","gates"],
+  "properties": {
+    "run_id":{"type":"string"},
+    "started_at":{"type":"string"},
+    "finished_at":{"type":["string","null"]},
+    "workflow_path":{"type":"string"},
+    "workflow_sha256":{"type":"string"},
+    "repo":{
+      "type":"object","required":["git_head","dirty"],
+      "properties":{"git_head":{"type":["string","null"]},"dirty":{"type":"boolean"}}
+    },
+    "machine_validation":{
+      "type":"object","required":["status","errors","warnings"],
+      "properties":{
+        "status":{"type":"string","enum":["pass","fail"]},
+        "errors":{"type":"array","items":{"type":"string"}},
+        "warnings":{"type":"array","items":{"type":"string"}}
+      }
+    },
+    "gates":{
+      "type":"object","required":["scope","merge"],
+      "properties":{
+        "scope":{"type":"object","required":["status"],
+          "properties":{"status":{"type":"string","enum":["pending","passed","failed"]},
+                        "approver":{"type":["string","null"]},
+                        "timestamp":{"type":["string","null"]}}},
+        "merge":{"type":"object","required":["status"],
+          "properties":{"status":{"type":"string","enum":["pending","passed","failed"]},
+                        "approver":{"type":["string","null"]},
+                        "timestamp":{"type":["string","null"]}}}
+      }
+    },
+    "artifacts":{"type":"array","items":{"type":"string"}}
+  }
+}
