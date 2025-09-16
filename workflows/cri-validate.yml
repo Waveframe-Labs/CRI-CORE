@@ -1,0 +1,21 @@
+name: CRI Validate (Syntax & Schema)
+on:
+  pull_request:
+  push:
+    paths:
+      - 'workflows/**.json'
+      - 'schemas/**.json'
+      - 'cri/**.py'
+      - '.github/workflows/cri-validate.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: JSON syntax check
+        run: |
+          for f in $(git ls-files '*.json'); do jq . "$f" >/dev/null || (echo "::error ::Invalid JSON: $f" && exit 1); done
+      - name: Schema check (stdlib)
+        run: python3 -m cri.cli validate workflows/minimal.json
