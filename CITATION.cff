@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: "CRI — Continuous Research Integration (Core)"
+message: "If you use this software, please cite it."
+type: software
+version: "v0.1.0"
+authors:
+  - family-names: Wright
+    given-names: Shawn C.
+    orcid: "https://orcid.org/0009-0006-6043-9295"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.xxxxxxxx
+repository-code: "https://github.com/Wright-Shawn/cri-core"
+license: Apache-2.0
+keywords: [reproducible research, auditability, AWO, CRI]
+contact:
+  - email: "shawnkardin@gmail.com"
