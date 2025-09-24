@@ -15,7 +15,7 @@
 
 ## About
 
-**CRI (Continuous Research Integration)** is the **toolchain implementation** of the **AI Workflow Orchestration (AWO) method**.  
+**CRI (Continuous Research Integration)** is the **toolchain implementation** of the **Aurora Workflow Orchestration (AWO) method**.  
 Where AWO defines the epistemic method, CRI provides the infrastructure: schemas, validators, and a stdlib runner to make every research update:
 
 - **Reproducible** — each run creates a timestamped, immutable folder.  
