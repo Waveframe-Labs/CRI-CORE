@@ -1,5 +1,8 @@
 # CRI — Continuous Research Integration (Core)
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/adfb0b5f-c2ad-4e3d-8220-2e79e25b4b36" />
+
+
 **Status:** Initial public release (v0.1.0)  
 **Tagline:** The AWO toolchain for reproducible, auditable research runs.
 
