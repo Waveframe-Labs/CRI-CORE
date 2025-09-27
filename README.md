@@ -1,6 +1,7 @@
-# CRI — Continuous Research Integration (Core)
+# CRI—CORE
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/adfb0b5f-c2ad-4e3d-8220-2e79e25b4b36" />
+![image](https://github.com/user-attachments/assets/6981bb84-df4d-4644-92d1-719b7aa3ed25)
+
 
 
 **Status:** Initial public release (v0.1.0)  
