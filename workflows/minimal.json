@@ -1,4 +1,5 @@
 {
+  "id": "minimal",
   "name": "minimal",
   "version": "0.1.0",
   "objectives": ["Demonstrate CRI run structure with no external dependencies."],
