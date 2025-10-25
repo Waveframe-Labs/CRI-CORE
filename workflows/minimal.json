@@ -1,18 +1,20 @@
 {
   "id": "minimal",
-  "name": "minimal",
+  "name": "AWO-aligned Minimal Workflow",
   "version": "0.1.0",
-  "objectives": ["Demonstrate CRI run structure with no external dependencies."],
+  "objectives": ["Demonstrate AWO-aligned claims and falsification tuple."],
   "inputs": [{ "path": "workflows/minimal.json", "role": "config" }],
-  "claims": [{
-    "id": "claim_baseline_traceability",
-    "statement": "CRI produces a self-contained run folder with manifest and gate templates.",
-    "falsification": {
-      "dataset": "run directory contents",
-      "procedure": "check presence of manifest.json, reports/validate.json, and gates/*.md",
-      "metric": { "name": "files_present", "target": 3, "tolerance": 0, "units": "count" }
+  "claims": [
+    {
+      "id": "claim_traceability",
+      "statement": "CRI produces a self-contained run folder with manifest and gate templates.",
+      "falsification": {
+        "dataset": "run directory contents",
+        "procedure": "after commit, check presence of run_manifest.json, SHA256SUMS.txt, and gates/*.md",
+        "metric": { "name": "files_present", "target": 3, "tolerance": 0, "units": "count" }
+      }
     }
-  }],
+  ],
   "steps": [
     { "id": "ingest",   "type": "ingest",   "uses": ["workflows/minimal.json"], "produces": ["manifest.json"] },
     { "id": "validate", "type": "evaluate", "uses": ["schemas/workflow.schema.json"], "produces": ["reports/validate.json"] },
