@@ -2,8 +2,8 @@
 """
 CRI-CORE root CLI (validate → run → commit)
 
-- validate <workflow.json>: basic structure check
-- run <workflow.json>: writes runs/<id>/run_manifest.json + SHA256SUMS.txt
+- validate <workflow.json>: AWO-aligned structure checks (claims/falsification)
+- run <workflow.json>: creates runs/<id>/ with manifest, workflow copy, hashes, lock
 - commit <run_id>: stages gate checklists under runs/<id>/gates/
 """
 
@@ -14,8 +14,9 @@ import hashlib
 import zlib
 import time
 import pathlib
+import subprocess  # for Git provenance
 
-# Try to import version from root __init__.py if you’ve set it; fall back quietly.
+# Try to import version from root __init__.py; fall back quietly.
 try:
     from __init__ import __version__  # type: ignore
 except Exception:
@@ -49,6 +50,24 @@ def _compress_ratio(b: bytes) -> float:
         return 1.0
     return len(zlib.compress(b)) / len(b)
 
+def _get_git_info(repo_root: pathlib.Path) -> dict:
+    """Collect Git provenance; return empty fields if Git unavailable."""
+    def _run(args):
+        try:
+            out = subprocess.check_output(args, cwd=repo_root, stderr=subprocess.DEVNULL)
+            return out.decode("utf-8").strip()
+        except Exception:
+            return ""
+    # `dirty` returns True if there is any uncommitted change
+    dirty_out = _run(["git", "status", "--porcelain"])
+    return {
+        "head":   _run(["git", "rev-parse", "HEAD"]),
+        "branch": _run(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
+        "remote": _run(["git", "config", "--get", "remote.origin.url"]),
+        "dirty":  bool(dirty_out)
+    }
+
+# -------------------------- VALIDATE --------------------------
 def cmd_validate(workflow_path: str) -> int:
     p = _resolve_workflow_path(workflow_path)
     try:
@@ -100,6 +119,7 @@ def cmd_validate(workflow_path: str) -> int:
     print("✓ Workflow validated (AWO-aligned)")
     return 0
 
+# ----------------------------- RUN ----------------------------
 def cmd_run(workflow_path: str) -> int:
     RUNS.mkdir(exist_ok=True)
     ts = time.strftime("%Y%m%d-%H%M%S")
@@ -108,37 +128,70 @@ def cmd_run(workflow_path: str) -> int:
     rdir = RUNS / run_id
     rdir.mkdir(parents=True, exist_ok=True)
 
-    raw = _resolve_workflow_path(workflow_path).read_bytes()
+    # Load workflow and compute its hash
+    wf_path = _resolve_workflow_path(workflow_path)
+    raw = wf_path.read_bytes()
     wf = json.loads(raw)
-    steps = wf.get("steps", [])
-    claims = wf.get("claims", [])
 
-    # ---- AWO-aligned manifest with provenance context ----
+    # Copy exact workflow into the run (immutability & inspection)
+    (rdir / "workflow.json").write_bytes(raw)
+
+    # Gather context
+    steps  = wf.get("steps", [])
+    claims = wf.get("claims", [])
+    git    = _get_git_info(ROOT)
+
+    # Manifest with Git provenance + workflow provenance
+    # Include workflow_path relative to repo root when possible
+    try:
+        rel_path = str(wf_path.relative_to(ROOT))
+    except ValueError:
+        rel_path = str(wf_path)
+
     manifest = {
         "run_id": run_id,
         "started_at": ts,
 
-        # provenance of the workflow used
+        # workflow provenance
         "workflow_id": wf.get("id"),
         "workflow_name": wf.get("name"),
+        "workflow_path": rel_path,
         "workflow_sha256": _sha256_bytes(raw),
 
         # AWO alignment
         "claims": [c.get("id") for c in claims],
 
-        # simple analytics (harmless placeholder)
-        "info_density": round(1.0 - _compress_ratio(raw), 4),
-
         # execution outline
-        "steps": steps
-    }
-    # ------------------------------------------------------
+        "steps": steps,
 
+        # repo provenance (binds run to source state)
+        "git": git,
+
+        # lightweight analytics
+        "info_density": round(1.0 - _compress_ratio(raw), 4)
+    }
+
+    # Write manifest
     (rdir / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    (rdir / "SHA256SUMS.txt").write_text(f"{manifest['workflow_sha256']}  {pathlib.Path(workflow_path)}\n", encoding="utf-8")
+
+    # Hash seal: proves key artifacts at creation time
+    seal_lines = [
+        f"{manifest['workflow_sha256']}  workflow.json",
+        f"{_sha256_bytes((rdir / 'run_manifest.json').read_bytes())}  run_manifest.json",
+    ]
+    (rdir / "SHA256SUMS.txt").write_text("\n".join(seal_lines) + "\n", encoding="utf-8")
+
+    # Lock sentinel (human-facing)
+    (rdir / "RUN_LOCK.txt").write_text(
+        "This directory is a sealed CRI run. Do not edit files in-place.\n"
+        "Regenerate via CLI to change state. See run_manifest.json for provenance.\n",
+        encoding="utf-8"
+    )
+
     print(f"✓ Run created: runs/{run_id}")
     return 0
 
+# --------------------------- COMMIT ---------------------------
 def cmd_commit(run_id: str) -> int:
     rdir = RUNS / run_id
     if not rdir.exists():
@@ -155,6 +208,7 @@ def cmd_commit(run_id: str) -> int:
     print(f"✓ Gates staged in runs/{run_id}/gates")
     return 0
 
+# ---------------------------- MAIN ---------------------------
 def main() -> int:
     ap = argparse.ArgumentParser(prog="cri", description="CRI-CORE CLI")
     ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
