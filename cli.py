@@ -109,14 +109,31 @@ def cmd_run(workflow_path: str) -> int:
     rdir.mkdir(parents=True, exist_ok=True)
 
     raw = _resolve_workflow_path(workflow_path).read_bytes()
-    steps = json.loads(raw).get("steps", [])
+    wf = json.loads(raw)
+    steps = wf.get("steps", [])
+    claims = wf.get("claims", [])
+
+    # ---- AWO-aligned manifest with provenance context ----
     manifest = {
         "run_id": run_id,
-        "workflow_sha256": _sha256_bytes(raw),
-        "info_density": round(1.0 - _compress_ratio(raw), 4),  # harmless proxy
         "started_at": ts,
-        "steps": steps,
+
+        # provenance of the workflow used
+        "workflow_id": wf.get("id"),
+        "workflow_name": wf.get("name"),
+        "workflow_sha256": _sha256_bytes(raw),
+
+        # AWO alignment
+        "claims": [c.get("id") for c in claims],
+
+        # simple analytics (harmless placeholder)
+        "info_density": round(1.0 - _compress_ratio(raw), 4),
+
+        # execution outline
+        "steps": steps
     }
+    # ------------------------------------------------------
+
     (rdir / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     (rdir / "SHA256SUMS.txt").write_text(f"{manifest['workflow_sha256']}  {pathlib.Path(workflow_path)}\n", encoding="utf-8")
     print(f"✓ Run created: runs/{run_id}")
