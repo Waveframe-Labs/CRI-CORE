@@ -9,24 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Show runner path info
+        with: { python-version: '3.11' }
+      - name: Validate & run minimal workflow
         run: |
-          echo "Workspace: $GITHUB_WORKSPACE"
-          echo "Current dir:"
-          pwd
-          echo "--- Contents ---"
-          ls -la
-          echo "--- Inner repo ---"
-          ls -la CRI-CORE || true
-          echo "--- Workflow file check ---"
-          find . -name minimal.json
-
-      - name: Validate & run minimal workflow (absolute path)
-        run: |
-          WF=$(find . -name minimal.json | head -n 1)
-          echo "Using workflow: $WF"
-          python3 cli.py validate "$WF"
-          python3 cli.py run      "$WF"
+          python3 cli.py validate workflows/minimal.json
+          python3 cli.py run      workflows/minimal.json
