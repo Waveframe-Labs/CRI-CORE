@@ -38,3 +38,97 @@ python3 cli.py validate workflows/minimal.json
 python3 cli.py run      workflows/minimal.json
 # copy the printed run_id, then:
 python3 cli.py commit   <RUN_ID>
+````
+
+**What you get:**
+
+* `runs/<RUN_ID>/run_manifest.json`
+* `runs/<RUN_ID>/SHA256SUMS.txt`
+* `runs/<RUN_ID>/gates/{scope_checklist.md, merge_checklist.md}`
+
+> Minimal JSON schema is included; strict validation and signing come next.
+
+---
+
+## Runtime shape
+
+**scope → (optional) fanout → audit → commit**
+
+* **scope:** load workflow; bind claims/IDs (MVP: structural checks)
+* **audit:** basic gates/checklists; fail-closed design (MVP: staged templates)
+* **commit:** write immutable artifacts (manifest + hashes)
+
+See: `docs/CRI_SPEC.md` and `docs/RUNTIME_OVERVIEW.md`.
+
+---
+
+## Repository layout (current)
+
+```
+cli.py                 # root CLI (current entrypoint)
+__init__.py            # version stub (optional)
+docs/
+  CRI_SPEC.md          # MVP spec (fill as we evolve)
+figures/
+  Demo/                # placeholder assets
+schemas/
+  run_manifest.schema.json
+  workflow.schema.json
+templates/
+  gates/
+    merge_checklist.md
+    scope_checklist.md
+workflows/
+  minimal.json         # minimal runnable example
+  cri-validate.yml     # CI
+  release*.yml         # release workflows
+```
+
+> Runtime artifacts (local): `runs/` (git-ignored).
+
+---
+
+## Roadmap (short, do-able)
+
+**v0.2.0 — AWO enforcement (strict)**
+
+* JSON Schema validation in CLI (`validate`)
+* Tighten run manifest fields and failure semantics
+
+**v0.3.0 — Plugin manager (alpha)**
+
+* Declarative `plugins_active.yaml`
+* Load/execute a simple metric plugin (e.g., compression/entropy proxy)
+
+**v0.4.0 — Attestation & evidence**
+
+* Signing pipeline (cosign/OIDC) optional
+* Evidence registry draft (`evidence.yaml`)
+
+**v0.5.0 — Enterprise scaffold**
+
+* UI dashboard (read-only)
+* Auth hooks & provenance ledger adapter (file → API)
+
+---
+
+## Contributing
+
+* Keep CRI-CORE strictly **runtime**; method changes belong in AWO (frozen).
+* README and CI must agree on the **same** CLI invocation.
+* Prefer small, auditable PRs: docs → schema → CLI → plugins.
+
+---
+
+## License & citation
+
+* **Code:** Apache-2.0 (`LICENSE`)
+* **Enterprise:** see `LICENSE-ENTERPRISE.md`
+* **Cite:** `CITATION.cff`
+
+---
+
+## Links
+
+* **AWO (method, finalized):** [https://github.com/Waveframe-Labs/Aurora-Workflow-Orchestration](https://github.com/Waveframe-Labs/Aurora-Workflow-Orchestration)
+* **AWO Concept DOI:** [https://doi.org/10.5281/zenodo.17013612](https://doi.org/10.5281/zenodo.17013612)
