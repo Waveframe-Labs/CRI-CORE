@@ -1,95 +1,40 @@
-# CRI—CORE
+# CRI-CORE — Continuous Research Integration (Core)
 
-![image](https://github.com/user-attachments/assets/6981bb84-df4d-4644-92d1-719b7aa3ed25)
+**Tagline:** *MLflow versions your models. CRI versions your reasoning.*  
+**Position:** CRI-CORE is the runtime that enforces AWO’s reproducibility rules as executable infrastructure.
 
-
-
-**Status:** Initial public release (v0.1.0)  
-**Tagline:** The AWO toolchain for reproducible, auditable research runs.
-
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](#license)
-[![CI: Validate](https://github.com/OWNER/REPO/actions/workflows/cri-validate.yml/badge.svg)](https://github.com/Wright-Shawn/cri-core/actions/workflows/cri-validate.yml)
-[![Release](https://github.com/OWNER/REPO/actions/workflows/release.yml/badge.svg)](https://github.com/Wright-Shawn/cri-core/actions/workflows/release.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.xxxxxxxx.svg)](https://doi.org/10.5281/zenodo.xxxxxxxx)
+> **AWO defines the rules. CRI enforces them.**
 
 ---
 
-## About
+## What this is (and isn’t)
 
-**CRI (Continuous Research Integration)** is the **toolchain implementation** of the **Aurora Workflow Orchestration (AWO) method**.  
-Where AWO defines the epistemic method, CRI provides the infrastructure: schemas, validators, and a stdlib runner to make every research update:
+**CRI-CORE** turns the **Aurora Workflow Orchestration (AWO)** method into a runnable, verifiable workflow system:
+- Validates workflow manifests
+- Executes a minimal run pipeline
+- Emits an immutable `runs/<id>/` record with hashes and a run manifest
+- Stages human gates/checklists for audit
 
-- **Reproducible** — each run creates a timestamped, immutable folder.  
-- **Auditable** — manifests include SHA-256 hashes, git HEAD, and gate checklists.  
-- **Falsifiable** — every claim specifies a dataset, procedure, and metric with target ± tolerance.  
-
-Think of it this way:
-- **AWO** = the scientific method (nobody owns it, everyone cites it).  
-- **CRI Core** = Git (open, indispensable infrastructure).  
-- **CRI Enterprise** (future) = GitHub/GitLab (dashboards, integrations, compliance).  
+It is **not** a UI, team platform, or ledger—those live in the **CRI-Enterprise** layer.
 
 ---
 
-## Quickstart
+## Lineage & provenance
+
+- **Method origin:** *Aurora Workflow Orchestration (AWO) v1.2* — finalized under Waveframe Labs  
+- **AWO concept DOI (authoritative):** https://doi.org/10.5281/zenodo.17013612  
+- **Role split:** AWO = methodology (frozen); CRI-CORE = runtime (evolves)
+
+See also: `docs/AWO_ORIGIN.md` (provenance note).
+
+---
+
+## Quickstart (current CLI)
+
+> Repo uses a **root** CLI file (`cli.py`). We’ll add a package entrypoint later if desired.
 
 ```bash
-# validate a workflow
-python -m cri.cli validate workflows/minimal.json
-
-# create a run folder with manifest + gates
-python -m cri.cli run --workflow workflows/minimal.json
-
-# fill in gates/scope_checklist.md and gates/merge_checklist.md
-python -m cri.cli commit --run runs/<timestamp>-minimal
-```
-
----
-
-## Repository Layout
-
-```
-cri/                # stdlib CLI
-schemas/            # workflow + manifest + claim + audit + decision
-templates/          # gate checklists
-workflows/          # examples
-runs/               # generated (committed for audit)
-docs/               # spec & licensing notes
-.github/workflows/  # CI: validate + release
-```
-
----
-
-## License
-
-- **CRI Core** is licensed under the [Apache License 2.0](LICENSE).  
-- **CRI Enterprise Add-ons** (dashboards, integrations, hosted services) will be licensed separately under [BSL/Proprietary terms](LICENSE-ENTERPRISE.md).  
-
-This **open-core split** maximizes adoption and academic legitimacy while reserving enterprise features for sustainability.
-
----
-
-## Citation
-
-If you use CRI, please cite both the software release and the underlying AWO method.
-
-```bibtex
-@software{wright_cri_core,
-  author       = {Shawn C. Wright},
-  title        = {{CRI — Continuous Research Integration (Core)}},
-  year         = {2025},
-  publisher    = {Zenodo},
-  version      = {v0.1.0},
-  doi          = {10.5281/zenodo.xxxxxxxx},
-  url          = {https://doi.org/10.5281/zenodo.xxxxxxxx}
-}
-```
-
-**Author ORCID:** [0009-0006-6043-9295](https://orcid.org/0009-0006-6043-9295)  
-**Contact:** shawnkardin(at)gmail(dot)com  
-
----
-
-## Branding
-
-**CRI — Continuous Research Integration, the AWO Toolchain.**  
-This name and DOI trail anchor legitimacy; forks may exist, but citations point back here.
+python3 cli.py validate workflows/minimal.json
+python3 cli.py run      workflows/minimal.json
+# copy the printed run_id, then:
+python3 cli.py commit   <RUN_ID>
