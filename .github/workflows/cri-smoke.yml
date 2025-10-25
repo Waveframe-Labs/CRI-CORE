@@ -11,8 +11,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Validate & run minimal workflow
+
+      - name: Show runner paths
         run: |
-          python3 cli.py --version || true
-          python3 cli.py validate workflows/minimal.json
-          python3 cli.py run      workflows/minimal.json
+          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+          pwd
+          ls -la
+          echo "----"
+          ls -la workflows || true
+          echo "Exists? ./workflows/minimal.json ->"
+          python3 - <<'PY'
+import pathlib
+print(pathlib.Path('workflows/minimal.json').resolve(), pathlib.Path('workflows/minimal.json').exists())
+print(pathlib.Path('../workflows/minimal.json').resolve(), pathlib.Path('../workflows/minimal.json').exists())
+print(pathlib.Path('../../workflows/minimal.json').resolve(), pathlib.Path('../../workflows/minimal.json').exists())
+PY
+
+      # remove the --version call; your CLI expects a subcommand
+      - name: Validate & run minimal workflow (absolute path)
+        run: |
+          WF="${GITHUB_WORKSPACE}/workflows/minimal.json"
+          echo "Using workflow: $WF"
+          python3 cli.py validate "$WF"
+          python3 cli.py run      "$WF"
