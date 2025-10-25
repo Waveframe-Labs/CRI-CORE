@@ -1,17 +1,22 @@
 cff-version: 1.2.0
-title: "CRI — Continuous Research Integration (Core)"
-message: "If you use this software, please cite it."
-type: software
-version: "v0.1.0"
+message: "If you use this software, please cite it as below."
+title: "CRI-CORE — Continuous Research Integration (Core)"
 authors:
   - family-names: Wright
     given-names: Shawn C.
     orcid: "https://orcid.org/0009-0006-6043-9295"
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.xxxxxxxx
-repository-code: "https://github.com/Wright-Shawn/cri-core"
-license: Apache-2.0
-keywords: [reproducible research, auditability, AWO, CRI]
-contact:
-  - email: "shawnkardin@gmail.com"
+abstract: >
+  CRI-CORE implements the runtime enforcement layer for the Aurora Workflow
+  Orchestration (AWO) methodology, transforming reproducible research governance
+  into executable infrastructure. AWO defines the rules; CRI enforces them.
+version: "0.1.0"
+date-released: "2025-10-24"
+license: "Apache-2.0"
+repository-code: "https://github.com/Waveframe-Labs/CRI-CORE"
+repository-artifact: "https://doi.org/10.5281/zenodo.17013612"
+keywords:
+  - reproducibility
+  - provenance
+  - AI governance
+  - falsifiability
+  - continuous research integration
