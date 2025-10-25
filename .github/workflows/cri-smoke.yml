@@ -12,25 +12,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Show runner paths
+      - name: Show runner path info
         run: |
-          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "Current dir:"
           pwd
+          echo "--- Contents ---"
           ls -la
-          echo "----"
-          ls -la workflows || true
-          echo "Exists? ./workflows/minimal.json ->"
-          python3 - <<'PY'
-import pathlib
-print(pathlib.Path('workflows/minimal.json').resolve(), pathlib.Path('workflows/minimal.json').exists())
-print(pathlib.Path('../workflows/minimal.json').resolve(), pathlib.Path('../workflows/minimal.json').exists())
-print(pathlib.Path('../../workflows/minimal.json').resolve(), pathlib.Path('../../workflows/minimal.json').exists())
-PY
+          echo "--- Inner repo ---"
+          ls -la CRI-CORE || true
+          echo "--- Workflow file check ---"
+          find . -name minimal.json
 
-      # remove the --version call; your CLI expects a subcommand
       - name: Validate & run minimal workflow (absolute path)
         run: |
-          WF="${GITHUB_WORKSPACE}/workflows/minimal.json"
+          WF=$(find . -name minimal.json | head -n 1)
           echo "Using workflow: $WF"
           python3 cli.py validate "$WF"
           python3 cli.py run      "$WF"
