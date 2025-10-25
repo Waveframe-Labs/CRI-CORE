@@ -56,12 +56,48 @@ def cmd_validate(workflow_path: str) -> int:
     except Exception as e:
         print(f"✗ Invalid JSON: {e}")
         return 1
-    required = ["id", "name", "steps"]
-    missing = [k for k in required if k not in wf]
+
+    # AWO minimal contract for a runnable workflow
+    must_have = ["id", "name", "steps", "claims"]
+    missing = [k for k in must_have if k not in wf]
     if missing:
         print(f"✗ Missing keys: {missing}")
         return 2
-    print("✓ Workflow validated")
+
+    # steps: array of objects with id + type
+    if not isinstance(wf["steps"], list) or any(not isinstance(s, dict) for s in wf["steps"]):
+        print("✗ 'steps' must be an array of objects")
+        return 2
+    for i, s in enumerate(wf["steps"], 1):
+        for k in ["id", "type"]:
+            if k not in s:
+                print(f"✗ step[{i}] missing '{k}'")
+                return 2
+
+    # claims: each must include falsification tuple per AWO (dataset, procedure, metric)
+    claim_errors = []
+    for i, c in enumerate(wf.get("claims", []), 1):
+        if not isinstance(c, dict):
+            claim_errors.append(f"claim[{i}] not an object"); continue
+        for k in ["id", "statement", "falsification"]:
+            if k not in c:
+                claim_errors.append(f"claim[{i}] missing '{k}'"); continue
+        fals = c.get("falsification", {})
+        for k in ["dataset", "procedure", "metric"]:
+            if k not in fals:
+                claim_errors.append(f"claim[{i}].falsification missing '{k}'")
+        metric = fals.get("metric", {})
+        for k in ["name", "target", "tolerance", "units"]:
+            if k not in metric:
+                claim_errors.append(f"claim[{i}].falsification.metric missing '{k}'")
+
+    if claim_errors:
+        print("✗ Claim validation errors:")
+        for e in claim_errors:
+            print("  -", e)
+        return 2
+
+    print("✓ Workflow validated (AWO-aligned)")
     return 0
 
 def cmd_run(workflow_path: str) -> int:
