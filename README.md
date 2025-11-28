@@ -1,5 +1,10 @@
 # CRI-CORE — Continuous Research Integration (Core)
 
+[![Waveframe Labs](https://img.shields.io/badge/WAVEFRAME%20LABS-Institutional%20Repository-FF6A00?style=flat)](https://waveframelabs.org)
+[![Governed Repository](https://img.shields.io/badge/Governance-ARI%20Compliant-8A2BE2?style=flat)](https://github.com/Waveframe-Labs/Aurora-Research-Initiative)
+[![DOI](https://zenodo.org/badge/DOI/INSERT_CONCEPT_DOI_HERE.svg)](https://doi.org/INSERT_CONCEPT_DOI_HERE)
+[![ORCID](https://img.shields.io/badge/ORCID-0009--0006--6043--9295-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0006-6043-9295)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)  
 **Tagline:** *MLflow versions your models. CRI versions your reasoning.*  
 **Position:** CRI-CORE is the runtime that enforces AWO’s reproducibility rules as executable infrastructure.
 
