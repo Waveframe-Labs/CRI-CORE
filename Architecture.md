@@ -422,11 +422,12 @@ A run MUST be materialized at:
 runs/<RUN_ID>/
 ```
 the run directory MUST declare the CRI-CORE contract version under which the run was executed.
-For example:
-```
+
+The run directory MUST contain a contract declaration file at:
+```  
 runs/<RUN_ID>/contract.json
-```
-or a field inside an existing machine file.
+```  
+This file MUST declare the exact enforcement contract version governing the run.
 
 The run identifier:
 
@@ -502,7 +503,7 @@ These outputs MUST:
 - represent the structural and governance invariant checks applied to the run,
 and be persisted inside the run directory, example:
 ```
-runs/<RUNS_ID>/validation
+runs/<RUN_ID>/validation
 ```
 
 At least one invariant validation phase MUST occur before finalization.
@@ -522,7 +523,7 @@ The approval record MUST include, at minimum:
 
 - the run identifier,
 - the approving human actor,
-- the approval timestamp (UTC),
+- the approval timestamp in RFC 3339 UTC format,
 - and a reference to the workflow execution context.
 
 The approval record MUST be created only after all required validation gates have completed.
@@ -553,6 +554,14 @@ At minimum, attestation material MUST include:
 
 The attestation material MUST be produced by the CRI-CORE finalization process.
 
+Attestation material is not part of the run directory and SHALL be treated as a separate governance surface that is cryptographically bound to the run artifact via references and signatures.
+
+Attestation material MUST declare:
+
+- the signature algorithm,
+- the public verification key or certificate reference,
+- and the verification procedure or standard used.
+  
 ---
 
 ### 3.10 Integrity manifest
@@ -568,6 +577,9 @@ The manifest MUST:
 - and be generated after all run files are present.
 
 The integrity manifest establishes the integrity boundary of the run artifact.
+
+The integrity manifest applies only to the contents of runs/<RUN_ID>/.
+Attestation material and governance surfaces are excluded from this manifest and are verified through their own signature and attestation mechanisms.
 
 ---
 
@@ -611,6 +623,8 @@ A CRI run artifact is contract-satisfying if and only if:
 - and the run has been committed to the governing repository.
 
 Failure of any required element SHALL render the run non-compliant with this contract.
+
+The contract declaration file exists and matches the contract version used by the enforcement engine.
 
 ---
 
@@ -752,6 +766,9 @@ The approval MUST:
 
 CRI-CORE SHALL NOT synthesize approval.
 
+The approval record MUST refer to the exact run artifact state that will be finalized and attested.
+No modification of run files SHALL occur between approval and finalization.  
+
 ---
 
 #### 4.4.5 Finalization and attestation stage
@@ -849,6 +866,13 @@ For every governed run, CRI-CORE MUST identify at minimum:
 These identities MUST be captured as machine-readable fields within the run context and used during enforcement.
 
 CRI-CORE MUST treat these roles as structurally distinct validation roles, regardless of whether they refer to the same underlying person.
+
+Orchestrator and reviewer identities MUST be represented as structured identifiers containing at minimum:
+
+- a stable identifier string
+- an identity type (for example: human, service, workflow, organization)
+
+The exact identity resolution semantics are out of scope, but structural equality of the identifier fields SHALL be used for independence checks.
 
 ---
 
@@ -977,10 +1001,18 @@ For every finalized run, CRI-CORE MUST produce and persist the following integri
 - a cryptographic signature for the finalized payload,
 - a cryptographic signature for the run attestation material.
 
+The finalized payload archive MUST be located at:
+```  
+runs/<RUN_ID>/payload.tar.gz
+```  
+and MUST contain an exact byte-for-byte archive of the run directory contents.
+
 The hash manifest MUST be generated deterministically over the full run directory contents.
 
 The finalized payload and attestation material MUST be signed using an external signing mechanism
 suitable for independent verification.
+
+The signing and verification algorithms used MUST be explicitly recorded in the attestation material.
 
 ---
 
