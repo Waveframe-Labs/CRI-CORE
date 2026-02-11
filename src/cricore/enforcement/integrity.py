@@ -1,6 +1,6 @@
 """
 ---
-title: "CRI-CORE Integrity and Provenance Enforcement Stage Shell"
+title: "CRI-CORE Integrity and Provenance Enforcement Stage"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted extraction of an integrity and provenance enforcement stage shell derived from Section 6 and Section 4.7 of the CRI-CORE enforcement contract, under human authorship and final approval."
+ai_assistance_details: "AI-assisted implementation of structural integrity and provenance enforcement derived from the CRI-CORE run context contract and Section 6 of the CRI-CORE enforcement contract."
 
 dependencies:
   - "../results/stage.py"
@@ -39,6 +39,7 @@ anchors:
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
 from ..results.stage import StageResult
@@ -51,25 +52,46 @@ def run_integrity_stage(
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
     """
-    Integrity and provenance enforcement stage.
+    Structural integrity and provenance enforcement.
 
-    This stage corresponds to Section 6 of the CRI-CORE Enforcement & Run Artifact
-    Contract.
-
-    This function is intentionally provided as a structural stage shell only.
-
-    It defines the enforcement surface and invocation boundary but does not yet
-    implement any hashing, signature verification, payload generation, or
-    provenance validation logic.
-
-    No enforcement semantics may be introduced here until:
-
-    - the finalized integrity artifact formats are ratified, and
-    - the attestation and signature mechanisms are formally selected and
-      documented.
-
+    This stage validates only the presence and structural form of the
+    integrity context declared by the run context contract.
     """
-    raise NotImplementedError(
-        "Integrity and provenance enforcement stage is not yet implemented. "
-        "This stage shell exists only to lock the CRI-CORE enforcement pipeline shape."
+
+    messages = []
+    failure_classes = []
+
+    integrity = None
+
+    if not run_context or not isinstance(run_context, Mapping):
+        messages.append("run_context is missing or not a mapping")
+    else:
+        integrity = run_context.get("integrity")
+
+    if not isinstance(integrity, Mapping):
+        messages.append("integrity section missing from run_context")
+        failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+    else:
+        for key in (
+            "workflow_execution_ref",
+            "run_payload_ref",
+            "attestation_ref",
+        ):
+            value = integrity.get(key)
+
+            if value is not None and not isinstance(value, str):
+                messages.append(f"integrity.{key} must be a string when present")
+
+        if messages:
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+
+    passed = not failure_classes
+
+    return StageResult(
+        stage_id="integrity",
+        passed=passed,
+        failure_classes=failure_classes,
+        messages=messages,
+        checked_at_utc=datetime.now(timezone.utc).isoformat(),
+        engine_version=None,
     )

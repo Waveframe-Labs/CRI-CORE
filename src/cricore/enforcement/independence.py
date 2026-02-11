@@ -1,6 +1,6 @@
 """
 ---
-title: "CRI-CORE Independence Enforcement Stage Shell"
+title: "CRI-CORE Independence Enforcement Stage"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted extraction of an enforcement stage shell derived from Section 5 and Section 4.7 of the CRI-CORE enforcement contract, under human authorship and final approval."
+ai_assistance_details: "AI-assisted implementation of structural independence enforcement derived from the CRI-CORE run context contract and Section 5 of the CRI-CORE enforcement contract."
 
 dependencies:
   - "../results/stage.py"
@@ -39,6 +39,7 @@ anchors:
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
 from ..results.stage import StageResult
@@ -51,23 +52,69 @@ def run_independence_stage(
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
     """
-    Independence and non-circular validation enforcement stage.
+    Structural independence and non-circular validation enforcement.
 
-    This stage corresponds to Section 5 of the CRI-CORE Enforcement & Run Artifact
-    Contract.
-
-    This function is intentionally provided as a structural stage shell only.
-
-    It defines the enforcement surface and invocation boundary but does not yet
-    implement any independence or role-separation logic.
-
-    No enforcement semantics may be introduced here until:
-
-    - orchestrator and reviewer identity sources are formally defined, and
-    - the run context contract for identity material is ratified.
-
+    Implements only the run_context structural contract.
     """
-    raise NotImplementedError(
-        "Independence enforcement stage is not yet implemented. "
-        "This stage shell exists only to lock the CRI-CORE enforcement pipeline shape."
+
+    messages = []
+    failure_classes = []
+
+    identities = None
+
+    if not run_context or not isinstance(run_context, Mapping):
+        messages.append("run_context is missing or not a mapping")
+    else:
+        identities = run_context.get("identities")
+
+    if not isinstance(identities, Mapping):
+        messages.append("identities section missing from run_context")
+        failure_classes.append(FailureClass.INDEPENDENCE_CHECK_FAILED)
+    else:
+        orchestrator = identities.get("orchestrator")
+        reviewer = identities.get("reviewer")
+        override = identities.get("self_approval_override", False)
+
+        if not isinstance(orchestrator, Mapping):
+            messages.append("identities.orchestrator missing or invalid")
+        if not isinstance(reviewer, Mapping):
+            messages.append("identities.reviewer missing or invalid")
+
+        def extract_identity(obj):
+            if not isinstance(obj, Mapping):
+                return None
+            i = obj.get("id")
+            t = obj.get("type")
+            if not isinstance(i, str) or not isinstance(t, str):
+                return None
+            return (i, t)
+
+        orch_id = extract_identity(orchestrator)
+        rev_id = extract_identity(reviewer)
+
+        if orch_id is None:
+            messages.append("orchestrator identity must contain string fields id and type")
+
+        if rev_id is None:
+            messages.append("reviewer identity must contain string fields id and type")
+
+        if orch_id is not None and rev_id is not None:
+            if orch_id == rev_id:
+                if override is not True:
+                    messages.append("self-approval detected and no override declared")
+                else:
+                    messages.append("self-approval override declared")
+
+        if messages:
+            failure_classes.append(FailureClass.INDEPENDENCE_CHECK_FAILED)
+
+    passed = not failure_classes
+
+    return StageResult(
+        stage_id="independence",
+        passed=passed,
+        failure_classes=failure_classes,
+        messages=messages,
+        checked_at_utc=datetime.now(timezone.utc).isoformat(),
+        engine_version=None,
     )

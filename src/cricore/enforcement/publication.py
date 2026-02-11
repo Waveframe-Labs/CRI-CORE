@@ -1,6 +1,6 @@
 """
 ---
-title: "CRI-CORE Publication and Commit Enforcement Stage Shell"
+title: "CRI-CORE Publication and Commit Enforcement Stage"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted extraction of a publication and commit enforcement stage shell derived from Section 4.4.6 and Section 6.8 of the CRI-CORE enforcement contract, under human authorship and final approval."
+ai_assistance_details: "AI-assisted implementation of structural publication and commit enforcement derived from the CRI-CORE run context contract and publication requirements in the CRI-CORE enforcement contract."
 
 dependencies:
   - "../results/stage.py"
@@ -39,6 +39,7 @@ anchors:
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
 from ..results.stage import StageResult
@@ -51,26 +52,41 @@ def run_publication_stage(
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
     """
-    Publication and commit enforcement stage.
+    Structural publication and commit enforcement.
 
-    This stage corresponds to the publication and commit requirements defined in:
-
-      - CRI-CORE Enforcement & Run Artifact Contract §4.4.6
-      - CRI-CORE Enforcement & Run Artifact Contract §6.8
-
-    This function is intentionally provided as a structural stage shell only.
-
-    It defines the enforcement surface and invocation boundary but does not yet
-    implement any repository inspection, commit verification, or publication
-    binding logic.
-
-    No enforcement semantics may be introduced here until:
-
-    - the repository binding strategy is formally defined, and
-    - the commit and publication verification rules are ratified.
-
+    This stage validates only the presence and structural form of the
+    publication context declared by the run context contract.
     """
-    raise NotImplementedError(
-        "Publication and commit enforcement stage is not yet implemented. "
-        "This stage shell exists only to lock the CRI-CORE enforcement pipeline shape."
+
+    messages = []
+    failure_classes = []
+
+    publication = None
+
+    if not run_context or not isinstance(run_context, Mapping):
+        messages.append("run_context is missing or not a mapping")
+    else:
+        publication = run_context.get("publication")
+
+    if not isinstance(publication, Mapping):
+        messages.append("publication section missing from run_context")
+        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+    else:
+        for key in ("repository_ref", "commit_ref"):
+            value = publication.get(key)
+            if value is not None and not isinstance(value, str):
+                messages.append(f"publication.{key} must be a string when present")
+
+        if messages:
+            failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+
+    passed = not failure_classes
+
+    return StageResult(
+        stage_id="publication",
+        passed=passed,
+        failure_classes=failure_classes,
+        messages=messages,
+        checked_at_utc=datetime.now(timezone.utc).isoformat(),
+        engine_version=None,
     )
