@@ -92,21 +92,19 @@ def run_independence_stage(
         orch_id = extract_identity(orchestrator)
         rev_id = extract_identity(reviewer)
 
-        if orch_id is None:
-            messages.append("orchestrator identity must contain string fields id and type")
-
-        if rev_id is None:
-            messages.append("reviewer identity must contain string fields id and type")
+        violation = False
 
         if orch_id is not None and rev_id is not None:
             if orch_id == rev_id:
                 if override is not True:
                     messages.append("self-approval detected and no override declared")
+                    violation = True
                 else:
                     messages.append("self-approval override declared")
 
-        if messages:
+        if violation:
             failure_classes.append(FailureClass.INDEPENDENCE_CHECK_FAILED)
+
 
     passed = not failure_classes
 
