@@ -1,7 +1,7 @@
 """
 ---
-title: "CRI-CORE Enforcement Pipeline Execution Test"
-filetype: "documentation"
+title: "CRI-CORE Enforcement Pipeline Orchestrator"
+filetype: "operational"
 type: "specification"
 domain: "enforcement"
 version: "0.1.0"
@@ -26,64 +26,81 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted test scaffolding aligned strictly to the CRI-CORE enforcement pipeline contract and stage ordering rules."
+ai_assistance_details: "AI-assisted extraction of a minimal, policy-free enforcement pipeline orchestrator derived from Section 4 of the CRI-CORE enforcement contract, under human authorship and final approval."
 
 dependencies:
-  - "../../src/cricore/enforcement/execution.py"
-  - "../../src/cricore/results/stage.py"
+  - "../run/structure.py"
+  - "./independence.py"
+  - "./integrity.py"
+  - "./publication.py"
+  - "../results/stage.py"
 
 anchors:
-  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.1.0"
+  - "CRI-CORE-EnforcementPipeline-v0.1.0"
 ---
 """
 
-from pathlib import Path
+from __future__ import annotations
 
-from cricore.enforcement.execution import run_enforcement_pipeline
+from typing import Any, List, Mapping, Optional
+
+from ..results.stage import StageResult
+from ..run.structure import run_structure_stage
+from .independence import run_independence_stage
+from .integrity import run_integrity_stage
+from .publication import run_publication_stage
 
 
-def test_enforcement_pipeline_executes_all_stages_in_order():
+def run_enforcement_pipeline(
+    run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
+    run_context: Optional[Mapping[str, Any]] = None,
+) -> List[StageResult]:
     """
-    Verifies that the enforcement pipeline executes all mandatory stages
-    in the defined order and returns a StageResult for each stage.
+    Execute the CRI-CORE enforcement pipeline in the mandatory stage order.
+
+    The orchestrator is policy-free and performs no semantic interpretation.
+
+    It is responsible only for:
+      - invoking each enforcement stage in the defined order
+      - collecting stage results
+
+    Stage ordering is fixed and derived from the CRI-CORE enforcement contract.
     """
 
-    # Use the already-validated structure fixture
-    run_root = (
-        Path(__file__).parent
-        / ".."
-        / "fixtures"
-        / "minimal_run_v0_1_0"
-        / "runs"
-        / "TEST-RUN-001"
-    ).resolve()
+    results: List[StageResult] = []
 
-    run_context = {
-        "identities": {
-            "orchestrator": {"id": "alice", "type": "human"},
-            "reviewer": {"id": "bob", "type": "human"},
-        },
-        "integrity": {
-            "workflow_execution_ref": "workflow-001",
-            "run_payload_ref": "payload-001",
-            "attestation_ref": "attestation-001",
-        },
-        "publication": {
-            "repository_ref": "repo-001",
-            "commit_ref": "abc123",
-        },
-    }
-
-    results = run_enforcement_pipeline(
-        str(run_root),
-        run_context=run_context,
+    # §4.4.2 – Structural invariant validation stage
+    results.append(
+        run_structure_stage(
+            run_path,
+            expected_contract_version=expected_contract_version,
+        )
     )
 
-    assert len(results) == 4
+    # §4.4.3 – Independence and role separation validation stage
+    results.append(
+        run_independence_stage(
+            run_path,
+            run_context=run_context,
+        )
+    )
 
-    assert [r.stage_id for r in results] == [
-        "run-structure",
-        "independence",
-        "integrity",
-        "publication",
-    ]
+    # §6 – Integrity and provenance enforcement stage
+    results.append(
+        run_integrity_stage(
+            run_path,
+            run_context=run_context,
+        )
+    )
+
+    # §4.4.6 / §6.8 – Publication and commit enforcement stage
+    results.append(
+        run_publication_stage(
+            run_path,
+            run_context=run_context,
+        )
+    )
+
+    return results
