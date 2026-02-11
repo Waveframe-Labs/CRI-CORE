@@ -1,0 +1,1 @@
+# placeholder – hashes are not validated in structure stage

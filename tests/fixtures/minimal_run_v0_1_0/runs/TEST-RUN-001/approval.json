@@ -1,0 +1,6 @@
+{
+  "run_id": "TEST-RUN-001",
+  "approved_by": "test-reviewer",
+  "approved_at": "2026-02-10T00:00:00Z",
+  "workflow_ref": "test-workflow"
+}
