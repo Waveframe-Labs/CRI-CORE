@@ -8,7 +8,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-02-09"
-updated: "2026-02-09"
+updated: "2026-02-10"
 
 author:
   name: "Shawn C. Wright"
@@ -26,11 +26,13 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted scaffolding of a structural run contract validator derived directly from Section 3 of the CRI-CORE enforcement contract."
+ai_assistance_details: "AI-assisted scaffolding of a structural run contract validator and stage adapter derived directly from Section 3 and Section 4.7 of the CRI-CORE enforcement contract."
 
 dependencies:
   - "./paths.py"
   - "../results/model.py"
+  - "../results/stage.py"
+  - "../errors.py"
   - "../contract/loader.py"
 
 anchors:
@@ -53,6 +55,8 @@ from ..contract.loader import (
     load_contract_declaration,
 )
 from ..results.model import ValidationResult
+from ..results.stage import StageResult
+from ..errors import FailureClass
 
 
 def validate_run_structure(
@@ -156,4 +160,54 @@ def validate_run_structure(
         warnings=warnings,
         checked_at_utc=datetime.now(timezone.utc).isoformat(),
         engine_version=None,
+    )
+
+
+def run_structure_stage(
+    run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
+) -> StageResult:
+    """
+    Structural enforcement stage adapter for the CRI run artifact contract.
+
+    This function maps the structural validation outcome into a single
+    CRI-CORE enforcement stage result, as required by §4.7.
+
+    Stage ID: "run-structure"
+    """
+
+    result = validate_run_structure(
+        run_path,
+        expected_contract_version=expected_contract_version,
+    )
+
+    failure_classes = []
+
+    if result.missing_paths:
+        failure_classes.append(FailureClass.MISSING_REQUIRED_ARTIFACT)
+
+    if result.invalid_paths:
+        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+
+    if result.contract_errors:
+        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+
+    if result.invariant_errors:
+        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+
+    messages = []
+
+    messages.extend(result.missing_paths)
+    messages.extend(result.invalid_paths)
+    messages.extend(result.contract_errors)
+    messages.extend(result.invariant_errors)
+
+    return StageResult(
+        stage_id="run-structure",
+        passed=result.passed,
+        failure_classes=failure_classes,
+        messages=messages,
+        checked_at_utc=result.checked_at_utc,
+        engine_version=result.engine_version,
     )
