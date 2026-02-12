@@ -8,7 +8,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-10"
+updated: "2026-02-11"
 
 author:
   name: "Shawn C. Wright"
@@ -26,11 +26,12 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted implementation of structural integrity and provenance enforcement derived from the CRI-CORE run context contract and Section 6 of the CRI-CORE enforcement contract."
+ai_assistance_details: "AI-assisted implementation of structural integrity and provenance enforcement derived from the CRI-CORE run context contract and Section 6 of the CRI-CORE enforcement contract, with an optional integrity finalization hook."
 
 dependencies:
   - "../results/stage.py"
   - "../errors.py"
+  - "../integrity/finalize.py"
 
 anchors:
   - "CRI-CORE-IntegrityStage-v0.1.0"
@@ -40,22 +41,28 @@ anchors:
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from ..results.stage import StageResult
 from ..errors import FailureClass
+from ..integrity.finalize import finalize_run_integrity
 
 
 def run_integrity_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
+    finalize: bool = False,
 ) -> StageResult:
     """
     Structural integrity and provenance enforcement.
 
     This stage validates only the presence and structural form of the
     integrity context declared by the run context contract.
+
+    When finalize=True and the stage passes, integrity finalization
+    artifacts are materialized.
     """
 
     messages = []
@@ -84,6 +91,10 @@ def run_integrity_stage(
 
         if messages:
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+
+    # Optional integrity finalization hook
+    if finalize and not failure_classes:
+        finalize_run_integrity(Path(run_path))
 
     passed = not failure_classes
 
