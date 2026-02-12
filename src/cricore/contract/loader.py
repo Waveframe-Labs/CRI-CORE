@@ -1,6 +1,6 @@
 """
 ---
-title: "CRI-CORE Enforcement Contract Declaration Loader"
+title: "CRI-CORE Run Contract Declaration Loader"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
@@ -8,7 +8,7 @@ version: "0.1.0"
 doi: "TBD-0.1.0"
 status: "Active"
 created: "2026-02-09"
-updated: "2026-02-09"
+updated: "2026-02-11"
 
 author:
   name: "Shawn C. Wright"
@@ -26,13 +26,13 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted design of a minimal contract declaration load/extract surface aligned to the CRI-CORE enforcement contract."
+ai_assistance_details: "AI-assisted implementation of a minimal structural loader for CRI run contract declarations, enforcing only presence and structural fields required by the CRI-CORE enforcement contract."
 
 dependencies:
-  - "../run/structure.py"
+  - "../errors.py"
 
 anchors:
-  - "CRI-CORE-ContractLoader-v0.1.0"
+  - "CRI-CORE-ContractDeclarationLoader-v0.1.0"
 ---
 """
 
@@ -40,63 +40,70 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Mapping, Optional
 
 
 class ContractDeclarationError(Exception):
-    """Raised when the contract declaration file is missing or unreadable."""
-
-
-def load_contract_declaration(run_root: Path) -> Dict[str, Any]:
     """
-    Load and parse runs/<RUN_ID>/contract.json.
-
-    Structural parsing only. No interpretation of contract semantics.
+    Raised when a run contract declaration cannot be loaded or parsed.
     """
+    pass
+
+
+def load_contract_declaration(run_root: Path) -> Mapping[str, Any]:
+    """
+    Load and minimally parse runs/<RUN_ID>/contract.json.
+
+    Structural enforcement only:
+      - file exists
+      - valid JSON
+      - root is an object
+    """
+
     contract_path = run_root / "contract.json"
+
     if not contract_path.exists():
-        raise ContractDeclarationError("Missing contract.json")
+        raise ContractDeclarationError("contract.json is missing")
+
+    if not contract_path.is_file():
+        raise ContractDeclarationError("contract.json is not a file")
 
     try:
-        with contract_path.open("r", encoding="utf-8") as f:
-            obj = json.load(f)
-    except Exception as exc:
-        raise ContractDeclarationError(f"Failed to parse contract.json: {exc}") from exc
+        raw = contract_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ContractDeclarationError(
+            f"failed to read contract.json: {exc}"
+        ) from exc
 
-    if not isinstance(obj, dict):
-        raise ContractDeclarationError("contract.json must be a JSON object")
+    try:
+        obj = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ContractDeclarationError(
+            f"invalid JSON in contract.json: {exc}"
+        ) from exc
+
+    if not isinstance(obj, Mapping):
+        raise ContractDeclarationError("contract.json must contain a JSON object")
 
     return obj
 
 
-def extract_contract_version(contract_obj: Dict[str, Any]) -> Optional[str]:
-    """
-    Extract contract_version from contract.json.
-
-    Expected minimal shape:
-      - contract_version: "X.Y.Z"
-    """
-    v = contract_obj.get("contract_version")
-    return v if isinstance(v, str) else None
+def extract_contract_version(contract_obj: Mapping[str, Any]) -> Optional[str]:
+    value = contract_obj.get("version")
+    if isinstance(value, str):
+        return value
+    return None
 
 
-def extract_run_id(contract_obj: Dict[str, Any]) -> Optional[str]:
-    """
-    Extract run_id from contract.json.
-
-    Expected minimal shape:
-      - run_id: "<RUN_ID>"
-    """
-    rid = contract_obj.get("run_id")
-    return rid if isinstance(rid, str) else None
+def extract_run_id(contract_obj: Mapping[str, Any]) -> Optional[str]:
+    value = contract_obj.get("run_id")
+    if isinstance(value, str):
+        return value
+    return None
 
 
-def extract_created_utc(contract_obj: Dict[str, Any]) -> Optional[str]:
-    """
-    Extract created_utc from contract.json.
-
-    Expected minimal shape:
-      - created_utc: RFC3339 UTC string (e.g. 2026-02-09T16:12:34Z)
-    """
-    ts = contract_obj.get("created_utc")
-    return ts if isinstance(ts, str) else None
+def extract_created_utc(contract_obj: Mapping[str, Any]) -> Optional[str]:
+    value = contract_obj.get("created_utc")
+    if isinstance(value, str):
+        return value
+    return None
