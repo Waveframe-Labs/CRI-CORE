@@ -89,7 +89,7 @@ def load_contract_declaration(run_root: Path) -> Mapping[str, Any]:
 
 
 def extract_contract_version(contract_obj: Mapping[str, Any]) -> Optional[str]:
-    value = contract_obj.get("version")
+    value = contract_obj.get("contract_version")
     if isinstance(value, str):
         return value
     return None
