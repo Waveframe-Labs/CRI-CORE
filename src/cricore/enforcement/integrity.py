@@ -4,11 +4,11 @@ title: "CRI-CORE Integrity and Provenance Enforcement Stage"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-11"
+updated: "2026-02-16"
 
 author:
   name: "Shawn C. Wright"
@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted implementation of structural integrity and provenance enforcement derived from the CRI-CORE run context contract and Section 6 of the CRI-CORE enforcement contract, with an optional integrity finalization hook."
+ai_assistance_details: "AI-assisted implementation of structural + cryptographic integrity verification for CRI-CORE run artifacts."
 
 dependencies:
   - "../results/stage.py"
@@ -34,12 +34,13 @@ dependencies:
   - "../integrity/finalize.py"
 
 anchors:
-  - "CRI-CORE-IntegrityStage-v0.1.0"
+  - "CRI-CORE-IntegrityStage-v0.2.0"
 ---
 """
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Optional
@@ -49,26 +50,51 @@ from ..errors import FailureClass
 from ..integrity.finalize import finalize_run_integrity
 
 
+def _compute_sha256(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _load_manifest(sha_path: Path) -> dict[str, str]:
+    """
+    Load SHA256SUMS.txt formatted as:
+      <sha256><two spaces><relative_posix_path>
+    """
+    manifest: dict[str, str] = {}
+
+    if not sha_path.exists():
+        raise FileNotFoundError("SHA256SUMS.txt missing")
+
+    for line in sha_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        digest, rel_path = parts[0], parts[-1]
+        manifest[rel_path] = digest
+
+    return manifest
+
+
 def run_integrity_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
     finalize: bool = False,
 ) -> StageResult:
-    """
-    Structural integrity and provenance enforcement.
-
-    This stage validates only the presence and structural form of the
-    integrity context declared by the run context contract.
-
-    When finalize=True and the stage passes, integrity finalization
-    artifacts are materialized.
-    """
 
     messages = []
     failure_classes = []
 
+    run_root = Path(run_path).resolve()
     integrity = None
+
+    # --- Structural validation (existing behavior) ---
 
     if not run_context or not isinstance(run_context, Mapping):
         messages.append("run_context is missing or not a mapping")
@@ -85,16 +111,40 @@ def run_integrity_stage(
             "attestation_ref",
         ):
             value = integrity.get(key)
-
             if value is not None and not isinstance(value, str):
                 messages.append(f"integrity.{key} must be a string when present")
 
         if messages:
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # Optional integrity finalization hook
+    # --- Cryptographic verification ---
+
+    sha_path = run_root / "SHA256SUMS.txt"
+
+    try:
+        manifest = _load_manifest(sha_path)
+    except Exception as exc:
+        messages.append(f"integrity manifest load failed: {exc}")
+        failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+        manifest = {}
+
+    for rel_path, expected_digest in manifest.items():
+        target = run_root / rel_path
+
+        if not target.exists():
+            messages.append(f"manifest references missing file: {rel_path}")
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+            continue
+
+        actual_digest = _compute_sha256(target)
+
+        if actual_digest != expected_digest:
+            messages.append(f"hash mismatch: {rel_path}")
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+
+    # Optional finalization
     if finalize and not failure_classes:
-        finalize_run_integrity(Path(run_path))
+        finalize_run_integrity(run_root)
 
     passed = not failure_classes
 
