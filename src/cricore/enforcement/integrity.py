@@ -238,7 +238,7 @@ def run_integrity_stage(
             messages.append("unexpected files present (not listed in SHA256SUMS.txt):")
             for p in unexpected_sorted:
                 messages.append(f"  - {p}")
-            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED))
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED) 
 
     # Optional finalization hook
     if finalize and not failure_classes:
