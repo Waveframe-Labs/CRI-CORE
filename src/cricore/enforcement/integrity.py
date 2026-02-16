@@ -177,7 +177,11 @@ def run_integrity_stage(
         if messages:
             if FailureClass.INTEGRITY_CHECK_FAILED not in failure_classes:
                 failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-
+   
+    # Optional finalization hook
+    if finalize and not failure_classes:
+        finalize_run_integrity(run_root)
+   
     # --- Cryptographic verification (auto-strict when SHA256SUMS.txt exists) ---
 
     sha_path = run_root / "SHA256SUMS.txt"
@@ -239,10 +243,6 @@ def run_integrity_stage(
             for p in unexpected_sorted:
                 messages.append(f"  - {p}")
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED) 
-
-    # Optional finalization hook
-    if finalize and not failure_classes:
-        finalize_run_integrity(run_root)
 
     passed = not failure_classes
 
