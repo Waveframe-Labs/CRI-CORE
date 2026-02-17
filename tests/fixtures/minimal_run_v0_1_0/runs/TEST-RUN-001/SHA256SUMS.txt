@@ -1,1 +1,5 @@
-# placeholder – hashes are not validated in structure stage
+624f88a473c64c05a7a17e06037b60e4168b761eb0d1cec1e28996631b922b29  approval.json
+da0c7ee7c59cb48dc4e5a517750d3929883f15a52ed887c7a72898b937c4a8dd  contract.json
+21dcdae00022d0383525aa7024c59c9ef6a198ad6aaadf44203067c5c630f451  randomness.json
+1934dc51883cbef644e3f11c439a2222c1e00a8ff72771ff80141e81d77505b5  report.md
+4930fc417da9f68c8f9a6d26e086656f44cd505da1a0fad41e8725afde3ab5a4  validation/invariant_results.json
