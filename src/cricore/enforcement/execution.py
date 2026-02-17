@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Orchestrator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-11"
+updated: "2026-02-16"
 
 author:
   name: "Shawn C. Wright"
@@ -34,9 +34,10 @@ dependencies:
   - "./integrity.py"
   - "./publication.py"
   - "../results/stage.py"
+  - "./repository_integrity.py"
 
 anchors:
-  - "CRI-CORE-EnforcementPipeline-v0.1.0"
+  - "CRI-CORE-EnforcementPipeline-v0.2.0"
 ---
 """
 
@@ -49,6 +50,7 @@ from ..run.structure import run_structure_stage
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage
 from .publication import run_publication_stage
+from .repository_integrity import run_repository_integrity_stage
 
 
 def run_enforcement_pipeline(
@@ -90,6 +92,29 @@ def run_enforcement_pipeline(
     # §6 – Integrity and provenance enforcement stage
     results.append(
         run_integrity_stage(
+            run_path,
+            run_context=run_context,
+        )
+    )
+
+    # §6 – Integrity and provenance enforcement stage (run-level)
+    results.append(
+        run_integrity_stage(
+            run_path,
+            run_context=run_context,
+        )
+    )
+
+    # Repository-level integrity enforcement stage
+    results.append(
+        run_repository_integrity_stage(
+            run_path,
+        )
+    )
+
+    # §4.4.6 / §6.8 – Publication and commit enforcement stage
+    results.append(
+        run_publication_stage(
             run_path,
             run_context=run_context,
         )
