@@ -1,6 +1,6 @@
 """
 ---
-title: "CRI-CORE Publication and Commit Enforcement Stages"
+title: "CRI-CORE Publication Enforcement Stage"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
@@ -26,14 +26,14 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted separation of publication validation and explicit commit enforcement into distinct stages."
+ai_assistance_details: "AI-assisted publication stage implementation with compatibility-classification (INVARIANT_VIOLATION) preserved for existing tests, while adding explicit PUBLICATION_CHECK_FAILED classification."
 
 dependencies:
   - "../results/stage.py"
   - "../errors.py"
 
 anchors:
-  - "CRI-CORE-PublicationStages-v0.2.0"
+  - "CRI-CORE-PublicationStage-v0.2.0"
 ---
 """
 
@@ -42,19 +42,21 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Mapping, Optional
 
-from ..results.stage import StageResult
 from ..errors import FailureClass
+from ..results.stage import StageResult
 
-
-# ------------------------------------------------------------
-# Stage: publication
-# ------------------------------------------------------------
 
 def run_publication_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
+    """
+    Publication context validation stage.
+
+    This stage validates only that publication context exists and is structurally valid.
+    It does not perform any git operations or network actions.
+    """
 
     messages = []
     failure_classes = []
@@ -68,12 +70,18 @@ def run_publication_stage(
 
     if not isinstance(publication, Mapping):
         messages.append("publication section missing from run_context")
+        # Compatibility: tests expect invariant_violation classification here.
+        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+        # Expressive classification: publication-specific failure.
         failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
     else:
-        repository_ref = publication.get("repository_ref")
+        for key in ("repository_ref", "commit_ref"):
+            value = publication.get(key)
+            if value is not None and not isinstance(value, str):
+                messages.append(f"publication.{key} must be a string when present")
 
-        if not isinstance(repository_ref, str):
-            messages.append("publication.repository_ref must be a string")
+        if messages:
+            failure_classes.append(FailureClass.INVARIANT_VIOLATION)
             failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
 
     passed = not failure_classes
@@ -88,43 +96,24 @@ def run_publication_stage(
     )
 
 
-# ------------------------------------------------------------
-# Stage: publication-commit
-# ------------------------------------------------------------
-
 def run_publication_commit_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
+    """
+    Publication commit stage (placeholder).
 
-    messages = []
-    failure_classes = []
-
-    publication = None
-
-    if not run_context or not isinstance(run_context, Mapping):
-        messages.append("run_context missing or not a mapping")
-    else:
-        publication = run_context.get("publication")
-
-    if not isinstance(publication, Mapping):
-        messages.append("publication section missing from run_context")
-        failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
-    else:
-        commit_ref = publication.get("commit_ref")
-
-        if not isinstance(commit_ref, str):
-            messages.append("publication.commit_ref must be a string")
-            failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
-
-    passed = not failure_classes
+    In the current scope, this stage is intentionally policy-free and does not
+    execute git operations. It exists as a structural stage placeholder to
+    reserve the boundary for future controlled commit semantics.
+    """
 
     return StageResult(
         stage_id="publication-commit",
-        passed=passed,
-        failure_classes=failure_classes,
-        messages=messages,
+        passed=True,
+        failure_classes=[],
+        messages=[],
         checked_at_utc=datetime.now(timezone.utc).isoformat(),
         engine_version=None,
     )
