@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Execution Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-11"
-updated: "2026-02-11"
+updated: "2026-02-16"
 
 author:
   name: "Shawn C. Wright"
@@ -26,14 +26,14 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted test scaffolding aligned strictly to the CRI-CORE enforcement pipeline contract and stage ordering rules."
+ai_assistance_details: "AI-assisted test scaffolding aligned to CRI-CORE enforcement pipeline stage ordering as of v0.2.0."
 
 dependencies:
   - "../../src/cricore/enforcement/execution.py"
   - "../../src/cricore/results/stage.py"
 
 anchors:
-  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.1.0"
+  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.2.0"
 ---
 """
 
@@ -48,7 +48,6 @@ def test_enforcement_pipeline_executes_all_stages_in_order():
     in the defined order and returns a StageResult for each stage.
     """
 
-    # Use the already-validated structure fixture
     run_root = (
         Path(__file__).parent
         / ".."
@@ -79,11 +78,16 @@ def test_enforcement_pipeline_executes_all_stages_in_order():
         run_context=run_context,
     )
 
-    assert len(results) == 4
+    # Canonical pipeline stage count
+    assert len(results) == 7
 
+    # Canonical pipeline stage order (v0.2.0)
     assert [r.stage_id for r in results] == [
         "run-structure",
+        "structure-contract-version-gate",
         "independence",
         "integrity",
+        "integrity-finalization",
         "publication",
+        "publication-commit",
     ]
