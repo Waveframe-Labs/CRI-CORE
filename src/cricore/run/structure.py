@@ -145,9 +145,19 @@ def validate_run_structure(
 
 def run_structure_stage(
     run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
 ) -> StageResult:
+    """
+    Structural enforcement stage adapter for the CRI run artifact contract.
 
-    result = validate_run_structure(run_path)
+    Stage ID: "run-structure"
+    """
+
+    result = validate_run_structure(
+        run_path,
+        expected_contract_version=expected_contract_version,
+    )
 
     failure_classes = []
 
@@ -164,6 +174,7 @@ def run_structure_stage(
         failure_classes.append(FailureClass.INVARIANT_VIOLATION)
 
     messages = []
+
     messages.extend(result.missing_paths)
     messages.extend(result.invalid_paths)
     messages.extend(result.contract_errors)
