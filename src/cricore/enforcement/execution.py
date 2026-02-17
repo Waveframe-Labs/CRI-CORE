@@ -26,15 +26,16 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted extraction of a minimal, policy-free enforcement pipeline orchestrator derived from Section 4 of the CRI-CORE enforcement contract, under human authorship and final approval."
+ai_assistance_details: "AI-assisted regeneration of canonical 7-stage enforcement pipeline aligned with CRI-CORE v0.2.0 stage model."
 
 dependencies:
+  - "../run/structure.py"
   - "../run/structure.py"
   - "./independence.py"
   - "./integrity.py"
   - "./publication.py"
-  - "../results/stage.py"
   - "./repository_integrity.py"
+  - "../results/stage.py"
 
 anchors:
   - "CRI-CORE-EnforcementPipeline-v0.2.0"
@@ -46,10 +47,16 @@ from __future__ import annotations
 from typing import Any, List, Mapping, Optional
 
 from ..results.stage import StageResult
-from ..run.structure import run_structure_stage
+from ..run.structure import (
+    run_structure_stage,
+    run_structure_contract_version_gate_stage,
+)
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage
-from .publication import run_publication_stage
+from .publication import (
+    run_publication_stage,
+    run_publication_commit_stage,
+)
 from .repository_integrity import run_repository_integrity_stage
 
 
@@ -60,20 +67,22 @@ def run_enforcement_pipeline(
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> List[StageResult]:
     """
-    Execute the CRI-CORE enforcement pipeline in the mandatory stage order.
+    Execute the canonical CRI-CORE enforcement pipeline.
 
-    The orchestrator is policy-free and performs no semantic interpretation.
+    Stage order (v0.2.0):
 
-    It is responsible only for:
-      - invoking each enforcement stage in the defined order
-      - collecting stage results
-
-    Stage ordering is fixed and derived from the CRI-CORE enforcement contract.
+      1. run-structure
+      2. structure-contract-version-gate
+      3. independence
+      4. integrity
+      5. integrity-finalization
+      6. publication
+      7. publication-commit
     """
 
     results: List[StageResult] = []
 
-    # §4.4.2 – Structural invariant validation stage
+    # 1. Structural invariant validation
     results.append(
         run_structure_stage(
             run_path,
@@ -81,7 +90,15 @@ def run_enforcement_pipeline(
         )
     )
 
-    # §4.4.3 – Independence and role separation validation stage
+    # 2. Structure contract version gate
+    results.append(
+        run_structure_contract_version_gate_stage(
+            run_path,
+            expected_contract_version=expected_contract_version,
+        )
+    )
+
+    # 3. Independence and role separation
     results.append(
         run_independence_stage(
             run_path,
@@ -89,7 +106,7 @@ def run_enforcement_pipeline(
         )
     )
 
-    # §6 – Integrity and provenance enforcement stage
+    # 4. Integrity verification
     results.append(
         run_integrity_stage(
             run_path,
@@ -97,22 +114,14 @@ def run_enforcement_pipeline(
         )
     )
 
-    # §6 – Integrity and provenance enforcement stage (run-level)
-    results.append(
-        run_integrity_stage(
-            run_path,
-            run_context=run_context,
-        )
-    )
-
-    # Repository-level integrity enforcement stage
+    # 5. Integrity finalization (explicit stage)
     results.append(
         run_repository_integrity_stage(
             run_path,
         )
     )
 
-    # §4.4.6 / §6.8 – Publication and commit enforcement stage
+    # 6. Publication validation
     results.append(
         run_publication_stage(
             run_path,
@@ -120,9 +129,9 @@ def run_enforcement_pipeline(
         )
     )
 
-    # §4.4.6 / §6.8 – Publication and commit enforcement stage
+    # 7. Publication commit enforcement
     results.append(
-        run_publication_stage(
+        run_publication_commit_stage(
             run_path,
             run_context=run_context,
         )
