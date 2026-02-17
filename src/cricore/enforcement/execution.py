@@ -8,7 +8,7 @@ version: "0.3.1"
 doi: "TBD-0.3.1"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-16"
+updated: "2026-02-17"
 
 author:
   name: "Shawn C. Wright"
@@ -132,10 +132,11 @@ def run_enforcement_pipeline(
 
     # 7. Publication commit stage
     results.append(
-        run_publication_commit_stage(
-            run_path,
-            run_context=run_context,
-        )
+    run_publication_commit_stage(
+        run_path,
+        prior_stage_results=results,
     )
+)
+
 
     return results
