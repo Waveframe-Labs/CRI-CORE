@@ -4,8 +4,8 @@ title: "CRI-CORE Integrity and Provenance Enforcement Stages"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.3.0"
-doi: "TBD-0.3.0"
+version: "0.3.1"
+doi: "TBD-0.3.1"
 status: "Active"
 created: "2026-02-10"
 updated: "2026-02-16"
@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted structural + cryptographic integrity enforcement stage expansion including canonical finalization stage."
+ai_assistance_details: "AI-assisted integrity stage separation with backward-compatible finalize support."
 
 dependencies:
   - "../results/stage.py"
@@ -34,8 +34,8 @@ dependencies:
   - "../integrity/finalize.py"
 
 anchors:
-  - "CRI-CORE-IntegrityStage-v0.3.0"
-  - "CRI-CORE-IntegrityFinalizationStage-v0.3.0"
+  - "CRI-CORE-IntegrityStage-v0.3.1"
+  - "CRI-CORE-IntegrityFinalizationStage-v0.3.1"
 ---
 """
 
@@ -52,7 +52,7 @@ from ..integrity.finalize import finalize_run_integrity
 
 
 # ---------------------------------------------------------------------
-# Utility helpers
+# Helpers
 # ---------------------------------------------------------------------
 
 def _compute_sha256(path: Path) -> str:
@@ -83,13 +83,14 @@ def _load_manifest(sha_path: Path) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------
-# Stage 1: Integrity Verification
+# Stage 1 — Integrity Verification
 # ---------------------------------------------------------------------
 
 def run_integrity_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
+    finalize: bool = False,  # backward compatibility
 ) -> StageResult:
 
     messages = []
@@ -142,6 +143,14 @@ def run_integrity_stage(
             messages.append(f"hash mismatch: {rel_path}")
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
+    # backward-compatible finalization hook
+    if finalize and not failure_classes:
+        try:
+            finalize_run_integrity(run_root)
+        except Exception as exc:
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+            messages.append(f"finalization failed: {exc}")
+
     passed = not failure_classes
 
     return StageResult(
@@ -155,11 +164,13 @@ def run_integrity_stage(
 
 
 # ---------------------------------------------------------------------
-# Stage 2: Integrity Finalization
+# Stage 2 — Integrity Finalization (Canonical)
 # ---------------------------------------------------------------------
 
 def run_integrity_finalization_stage(
     run_path: str,
+    *,
+    run_context: Optional[Mapping[str, Any]] = None,  # accepted for interface symmetry
 ) -> StageResult:
 
     run_root = Path(run_path).resolve()
