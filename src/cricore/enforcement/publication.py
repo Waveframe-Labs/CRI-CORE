@@ -1,14 +1,14 @@
 """
 ---
-title: "CRI-CORE Publication and Commit Enforcement Stage"
+title: "CRI-CORE Publication and Commit Enforcement Stages"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-10"
+updated: "2026-02-16"
 
 author:
   name: "Shawn C. Wright"
@@ -26,14 +26,14 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted implementation of structural publication and commit enforcement derived from the CRI-CORE run context contract and publication requirements in the CRI-CORE enforcement contract."
+ai_assistance_details: "AI-assisted separation of publication validation and explicit commit enforcement into distinct stages."
 
 dependencies:
   - "../results/stage.py"
   - "../errors.py"
 
 anchors:
-  - "CRI-CORE-PublicationStage-v0.1.0"
+  - "CRI-CORE-PublicationStages-v0.2.0"
 ---
 """
 
@@ -46,17 +46,15 @@ from ..results.stage import StageResult
 from ..errors import FailureClass
 
 
+# ------------------------------------------------------------
+# Stage: publication
+# ------------------------------------------------------------
+
 def run_publication_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
-    """
-    Structural publication and commit enforcement.
-
-    This stage validates only the presence and structural form of the
-    publication context declared by the run context contract.
-    """
 
     messages = []
     failure_classes = []
@@ -64,26 +62,66 @@ def run_publication_stage(
     publication = None
 
     if not run_context or not isinstance(run_context, Mapping):
-        messages.append("run_context is missing or not a mapping")
+        messages.append("run_context missing or not a mapping")
     else:
         publication = run_context.get("publication")
 
     if not isinstance(publication, Mapping):
         messages.append("publication section missing from run_context")
-        failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+        failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
     else:
-        for key in ("repository_ref", "commit_ref"):
-            value = publication.get(key)
-            if value is not None and not isinstance(value, str):
-                messages.append(f"publication.{key} must be a string when present")
+        repository_ref = publication.get("repository_ref")
 
-        if messages:
-            failure_classes.append(FailureClass.INVARIANT_VIOLATION)
+        if not isinstance(repository_ref, str):
+            messages.append("publication.repository_ref must be a string")
+            failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
 
     passed = not failure_classes
 
     return StageResult(
         stage_id="publication",
+        passed=passed,
+        failure_classes=failure_classes,
+        messages=messages,
+        checked_at_utc=datetime.now(timezone.utc).isoformat(),
+        engine_version=None,
+    )
+
+
+# ------------------------------------------------------------
+# Stage: publication-commit
+# ------------------------------------------------------------
+
+def run_publication_commit_stage(
+    run_path: str,
+    *,
+    run_context: Optional[Mapping[str, Any]] = None,
+) -> StageResult:
+
+    messages = []
+    failure_classes = []
+
+    publication = None
+
+    if not run_context or not isinstance(run_context, Mapping):
+        messages.append("run_context missing or not a mapping")
+    else:
+        publication = run_context.get("publication")
+
+    if not isinstance(publication, Mapping):
+        messages.append("publication section missing from run_context")
+        failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
+    else:
+        commit_ref = publication.get("commit_ref")
+
+        if not isinstance(commit_ref, str):
+            messages.append("publication.commit_ref must be a string")
+            failure_classes.append(FailureClass.PUBLICATION_CHECK_FAILED)
+
+    passed = not failure_classes
+
+    return StageResult(
+        stage_id="publication-commit",
         passed=passed,
         failure_classes=failure_classes,
         messages=messages,
