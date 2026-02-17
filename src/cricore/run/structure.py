@@ -26,7 +26,7 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted refactor separating structural validation from explicit contract version gate enforcement."
+ai_assistance_details: "AI-assisted refinement of structural run contract validation to support optional contract version gating (expected_contract_version) while preserving original structural semantics."
 
 dependencies:
   - "./paths.py"
@@ -59,13 +59,27 @@ from ..results.stage import StageResult
 from ..errors import FailureClass
 
 
-# -------------------------------------------------------------------
-# Core structural validation (no version gate here anymore)
-# -------------------------------------------------------------------
-
 def validate_run_structure(
     run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
 ) -> ValidationResult:
+    """
+    Validate the structural conformity of a CRI-CORE run directory against the
+    CRI run artifact contract.
+
+    Enforcement surface:
+      - presence + placement of required files/directories
+      - contract.json existence + structural parse
+      - optional contract version gating (expected_contract_version)
+      - run_id binding between directory name and contract.json (structural equality)
+
+    Out of scope (by contract):
+      - integrity verification
+      - independence checks
+      - attestation verification
+      - publication/commit verification
+    """
 
     run_root = Path(run_path)
 
@@ -76,14 +90,18 @@ def validate_run_structure(
     warnings = []
 
     run_id_from_path = run_root.name if run_root.exists() else None
+
     declared_contract_version: Optional[str] = None
 
+    # Root existence/type checks
     if not run_root.exists():
         missing_paths.append(str(run_root))
     elif not run_root.is_dir():
         invalid_paths.append(str(run_root))
 
+    # Only proceed with deeper checks if run_root is a directory
     if run_root.exists() and run_root.is_dir():
+        # contract.json parsing and minimal field extraction
         try:
             contract_obj = load_contract_declaration(run_root)
 
@@ -102,15 +120,22 @@ def validate_run_structure(
             if declared_created_utc is None:
                 contract_errors.append("created_utc missing or not a string in contract.json")
 
+            # Optional version gate
+            if expected_contract_version is not None:
+                if declared_contract_version != expected_contract_version:
+                    contract_errors.append("Declared contract version does not match expected version")
+
         except ContractDeclarationError as exc:
             contract_errors.append(str(exc))
 
+        # Required file checks
         for p in required_file_paths(run_root):
             if not p.exists():
                 missing_paths.append(str(p))
             elif not p.is_file():
                 invalid_paths.append(str(p))
 
+        # Required directory checks
         for p in required_directory_paths(run_root):
             if not p.exists():
                 missing_paths.append(str(p))
@@ -138,10 +163,6 @@ def validate_run_structure(
         engine_version=None,
     )
 
-
-# -------------------------------------------------------------------
-# Stage: run-structure
-# -------------------------------------------------------------------
 
 def run_structure_stage(
     run_path: str,
@@ -183,38 +204,6 @@ def run_structure_stage(
     return StageResult(
         stage_id="run-structure",
         passed=result.passed,
-        failure_classes=failure_classes,
-        messages=messages,
-        checked_at_utc=result.checked_at_utc,
-        engine_version=result.engine_version,
-    )
-
-
-# -------------------------------------------------------------------
-# Stage: structure-contract-version-gate
-# -------------------------------------------------------------------
-
-def run_structure_contract_version_gate_stage(
-    run_path: str,
-    *,
-    expected_contract_version: Optional[str],
-) -> StageResult:
-
-    result = validate_run_structure(run_path)
-
-    failure_classes = []
-    messages = []
-
-    if expected_contract_version is not None:
-        if result.contract_version != expected_contract_version:
-            failure_classes.append(FailureClass.INVARIANT_VIOLATION)
-            messages.append("Declared contract version does not match expected version")
-
-    passed = not failure_classes
-
-    return StageResult(
-        stage_id="structure-contract-version-gate",
-        passed=passed,
         failure_classes=failure_classes,
         messages=messages,
         checked_at_utc=result.checked_at_utc,
