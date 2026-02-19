@@ -4,8 +4,8 @@ title: "CRI-CORE Enforcement Pipeline Orchestrator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.0"
-doi: "TBD-0.4.0"
+version: "0.4.1"
+doi: "TBD-0.4.1"
 status: "Active"
 created: "2026-02-10"
 updated: "2026-02-19"
@@ -37,7 +37,7 @@ dependencies:
   - "../results/stage.py"
 
 anchors:
-  - "CRI-CORE-EnforcementPipeline-v0.4.0"
+  - "CRI-CORE-EnforcementPipeline-v0.4.1"
 ---
 """
 
@@ -51,6 +51,7 @@ from .lifecycle import run_lifecycle_conformity_stage
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage, run_integrity_finalization_stage
 from .publication import run_publication_stage, run_publication_commit_stage
+from .stage_ids import StageID, CANONICAL_STAGE_ORDER
 
 
 def _make_version_gate_stage(
@@ -68,7 +69,7 @@ def _make_version_gate_stage(
 
     if expected_contract_version is None:
         return StageResult(
-            stage_id="structure-contract-version-gate",
+            stage_id=StageID.VERSION_GATE,
             passed=True,
             failure_classes=[],
             messages=["skipped: no expected_contract_version provided"],
