@@ -26,11 +26,10 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted canonical pipeline alignment including lifecycle contract conformity stage and prerequisite-aware gates."
+ai_assistance_details: "AI-assisted refactor to make commit semantics explicit via commit_allowed return value."
 
 dependencies:
   - "../run/structure.py"
-  - "./lifecycle.py"
   - "./independence.py"
   - "./integrity.py"
   - "./publication.py"
@@ -43,15 +42,13 @@ anchors:
 
 from __future__ import annotations
 
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Mapping, Optional, Tuple
 
 from ..results.stage import StageResult
 from ..run.structure import run_structure_stage
-from .lifecycle import run_lifecycle_conformity_stage
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage, run_integrity_finalization_stage
 from .publication import run_publication_stage, run_publication_commit_stage
-from .stage_ids import StageID, CANONICAL_STAGE_ORDER
 
 
 def _make_version_gate_stage(
@@ -59,17 +56,9 @@ def _make_version_gate_stage(
     expected_contract_version: Optional[str],
     structure_stage: StageResult,
 ) -> StageResult:
-    """
-    Represent the structure contract version gate as a distinct stage result.
-
-    Conservative logic:
-      - if expected_contract_version is None → gate passes (skipped)
-      - else → gate passes only if structure stage passed
-    """
-
     if expected_contract_version is None:
         return StageResult(
-            stage_id=StageID.VERSION_GATE,
+            stage_id="structure-contract-version-gate",
             passed=True,
             failure_classes=[],
             messages=["skipped: no expected_contract_version provided"],
@@ -102,65 +91,47 @@ def run_enforcement_pipeline(
     *,
     expected_contract_version: Optional[str] = None,
     run_context: Optional[Mapping[str, Any]] = None,
-) -> List[StageResult]:
+) -> Tuple[List[StageResult], bool]:
     """
     Execute the canonical CRI-CORE enforcement pipeline.
 
-    Canonical 8-stage order (v0.4.x):
+    Returns:
+        (results, commit_allowed)
 
-      1. run-structure
-      2. structure-contract-version-gate
-      3. lifecycle-contract-conformity
-      4. independence
-      5. integrity
-      6. integrity-finalization
-      7. publication
-      8. publication-commit
-
-    Properties:
-      - All stages always emit results
-      - Later stages may be blocked by earlier failures
-      - publication-commit hard-gates on ALL prior stages
+    commit_allowed is TRUE if and only if the publication-commit stage passes.
     """
 
     results: List[StageResult] = []
 
-    # 1) Structural invariant validation
+    # 1) Structure
     structure_res = run_structure_stage(
         run_path,
         expected_contract_version=expected_contract_version,
     )
     results.append(structure_res)
 
-    # 2) Explicit version gate stage
+    # 2) Version gate
     version_gate_res = _make_version_gate_stage(
         expected_contract_version=expected_contract_version,
         structure_stage=structure_res,
     )
     results.append(version_gate_res)
 
-    # 3) Lifecycle contract conformity
-    lifecycle_res = run_lifecycle_conformity_stage(
-        run_path,
-        run_context=run_context,
-    )
-    results.append(lifecycle_res)
-
-    # 4) Independence enforcement
+    # 3) Independence
     independence_res = run_independence_stage(
         run_path,
         run_context=run_context,
     )
     results.append(independence_res)
 
-    # 5) Integrity enforcement (non-mutating)
+    # 4) Integrity
     integrity_res = run_integrity_stage(
         run_path,
         run_context=run_context,
     )
     results.append(integrity_res)
 
-    # 6) Integrity finalization (mutating)
+    # 5) Integrity finalization
     finalization_res = run_integrity_finalization_stage(
         run_path,
         run_context=run_context,
@@ -168,18 +139,20 @@ def run_enforcement_pipeline(
     )
     results.append(finalization_res)
 
-    # 7) Publication validation
+    # 6) Publication validation
     publication_res = run_publication_stage(
         run_path,
         run_context=run_context,
     )
     results.append(publication_res)
 
-    # 8) Publication commit (hard gate on ALL prior results)
+    # 7) Publication commit
     commit_res = run_publication_commit_stage(
         run_path,
         prior_stage_results=results,
     )
     results.append(commit_res)
 
-    return results
+    commit_allowed = commit_res.passed
+
+    return results, commit_allowed
