@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Orchestrator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.3.2"
-doi: "TBD-0.3.2"
+version: "0.4.0"
+doi: "TBD-0.4.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-17"
+updated: "2026-02-19"
 
 author:
   name: "Shawn C. Wright"
@@ -26,17 +26,18 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted canonical pipeline alignment to produce a truthful 7-stage ordering with prerequisite-aware gates."
+ai_assistance_details: "AI-assisted canonical pipeline alignment including lifecycle contract conformity stage and prerequisite-aware gates."
 
 dependencies:
   - "../run/structure.py"
+  - "./lifecycle.py"
   - "./independence.py"
   - "./integrity.py"
   - "./publication.py"
   - "../results/stage.py"
 
 anchors:
-  - "CRI-CORE-EnforcementPipeline-v0.3.2"
+  - "CRI-CORE-EnforcementPipeline-v0.4.0"
 ---
 """
 
@@ -46,6 +47,7 @@ from typing import Any, List, Mapping, Optional
 
 from ..results.stage import StageResult
 from ..run.structure import run_structure_stage
+from .lifecycle import run_lifecycle_conformity_stage
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage, run_integrity_finalization_stage
 from .publication import run_publication_stage, run_publication_commit_stage
@@ -57,14 +59,11 @@ def _make_version_gate_stage(
     structure_stage: StageResult,
 ) -> StageResult:
     """
-    Represent the structure contract version gate as a distinct stage result,
-    without pretending success when structure enforcement failed.
+    Represent the structure contract version gate as a distinct stage result.
 
-    We cannot perfectly isolate "version mismatch" from other structure failures
-    without deeper structure diagnostics, so this gate is defined conservatively:
-
-      - if expected_contract_version is None: gate is "skipped" and passes
-      - else: gate passes only if structure_stage.passed is True
+    Conservative logic:
+      - if expected_contract_version is None → gate passes (skipped)
+      - else → gate passes only if structure stage passed
     """
 
     if expected_contract_version is None:
@@ -106,19 +105,21 @@ def run_enforcement_pipeline(
     """
     Execute the canonical CRI-CORE enforcement pipeline.
 
-    Stage order (canonical 7-stage):
+    Canonical 8-stage order (v0.4.x):
 
       1. run-structure
       2. structure-contract-version-gate
-      3. independence
-      4. integrity
-      5. integrity-finalization
-      6. publication
-      7. publication-commit
+      3. lifecycle-contract-conformity
+      4. independence
+      5. integrity
+      6. integrity-finalization
+      7. publication
+      8. publication-commit
 
-    Policy-free orchestration:
-      - always emits all stage results in canonical order
-      - later stages may be "blocked" based on earlier failures
+    Properties:
+      - All stages always emit results
+      - Later stages may be blocked by earlier failures
+      - publication-commit hard-gates on ALL prior stages
     """
 
     results: List[StageResult] = []
@@ -130,28 +131,35 @@ def run_enforcement_pipeline(
     )
     results.append(structure_res)
 
-    # 2) Explicit version gate stage (truthful)
+    # 2) Explicit version gate stage
     version_gate_res = _make_version_gate_stage(
         expected_contract_version=expected_contract_version,
         structure_stage=structure_res,
     )
     results.append(version_gate_res)
 
-    # 3) Independence enforcement
+    # 3) Lifecycle contract conformity
+    lifecycle_res = run_lifecycle_conformity_stage(
+        run_path,
+        run_context=run_context,
+    )
+    results.append(lifecycle_res)
+
+    # 4) Independence enforcement
     independence_res = run_independence_stage(
         run_path,
         run_context=run_context,
     )
     results.append(independence_res)
 
-    # 4) Integrity enforcement (non-mutating)
+    # 5) Integrity enforcement (non-mutating)
     integrity_res = run_integrity_stage(
         run_path,
         run_context=run_context,
     )
     results.append(integrity_res)
 
-    # 5) Integrity finalization (mutating) — only if integrity passed
+    # 6) Integrity finalization (mutating)
     finalization_res = run_integrity_finalization_stage(
         run_path,
         run_context=run_context,
@@ -159,14 +167,14 @@ def run_enforcement_pipeline(
     )
     results.append(finalization_res)
 
-    # 6) Publication validation
+    # 7) Publication validation
     publication_res = run_publication_stage(
         run_path,
         run_context=run_context,
     )
     results.append(publication_res)
 
-    # 7) Publication commit stage — should hard gate on all prior results
+    # 8) Publication commit (hard gate on ALL prior results)
     commit_res = run_publication_commit_stage(
         run_path,
         prior_stage_results=results,
