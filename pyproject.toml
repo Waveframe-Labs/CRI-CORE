@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cricore"
+version = "0.4.0"
+description = "CRI-CORE — Deterministic enforcement kernel for governed claim transitions."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+
+authors = [
+    { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
+]
+
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
