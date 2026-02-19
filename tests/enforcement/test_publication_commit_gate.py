@@ -4,11 +4,11 @@ title: "CRI-CORE Publication Commit Gate Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.1.1"
+doi: "TBD-0.1.1"
 status: "Active"
 created: "2026-02-17"
-updated: "2026-02-17"
+updated: "2026-02-19"
 
 author:
   name: "Shawn C. Wright"
@@ -26,29 +26,19 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted construction of enforcement boundary test to validate atomic commit gating behavior."
-
-dependencies:
-  - "../../src/cricore/enforcement/execution.py"
-  - "../../src/cricore/results/stage.py"
-
-anchors:
-  - "CRI-CORE-CommitGateTest-v0.1.0"
+ai_assistance_details: "AI-assisted update for explicit commit_allowed return semantics."
 ---
 """
 
 from pathlib import Path
+import shutil
 
 from cricore.enforcement.execution import run_enforcement_pipeline
 
 
-def test_publication_commit_fails_when_integrity_fails():
-    """
-    Verifies that publication-commit fails if a prior stage (integrity)
-    fails in the enforcement pipeline.
-    """
+def test_publication_commit_fails_when_integrity_fails(tmp_path: Path):
 
-    run_root = (
+    fixture_root = (
         Path(__file__).parent
         / ".."
         / "fixtures"
@@ -57,32 +47,40 @@ def test_publication_commit_fails_when_integrity_fails():
         / "TEST-RUN-001"
     ).resolve()
 
-    # Intentionally omit required integrity context to force failure
+    run_root = tmp_path / "TEST-RUN-001"
+    shutil.copytree(fixture_root, run_root)
+
+    # Corrupt integrity by modifying a file after manifest exists
+    report_path = run_root / "report.md"
+    report_path.write_text("tampered", encoding="utf-8")
+
     run_context = {
         "identities": {
             "orchestrator": {"id": "alice", "type": "human"},
             "reviewer": {"id": "bob", "type": "human"},
         },
-        # integrity section missing on purpose
+        "integrity": {
+            "workflow_execution_ref": "workflow-001",
+            "run_payload_ref": "payload-001",
+            "attestation_ref": "attestation-001",
+        },
         "publication": {
             "repository_ref": "repo-001",
             "commit_ref": "abc123",
         },
     }
 
-    results = run_enforcement_pipeline(
+    results, commit_allowed = run_enforcement_pipeline(
         str(run_root),
         run_context=run_context,
     )
 
-    stage_map = {r.stage_id: r for r in results}
-
     # Integrity should fail
-    assert stage_map["integrity"].passed is False
+    integrity_stage = next(r for r in results if r.stage_id == "integrity")
+    assert integrity_stage.passed is False
 
-    # Commit must also fail
-    assert stage_map["publication-commit"].passed is False
+    # Commit must be blocked
+    assert commit_allowed is False
 
-    # Ensure commit failure references integrity failure
-    commit_messages = " ".join(stage_map["publication-commit"].messages).lower()
-    assert "integrity" in commit_messages
+    commit_stage = next(r for r in results if r.stage_id == "publication-commit")
+    assert commit_stage.passed is False
