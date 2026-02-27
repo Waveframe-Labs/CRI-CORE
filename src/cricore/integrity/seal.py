@@ -4,8 +4,8 @@ title: "CRI-CORE Run Seal Builder"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.2.0"
-doi: "TBD-0.2.0"
+version: "0.3.0"
+doi: "TBD-0.3.0"
 status: "Active"
 created: "2026-02-27"
 updated: "2026-02-27"
@@ -31,7 +31,7 @@ dependencies:
   - "./manifest.py"
 
 anchors:
-  - "CRI-CORE-RunSealBuilder-v0.2.0"
+  - "CRI-CORE-RunSealBuilder-v0.3.0"
 ---
 """
 
@@ -64,26 +64,27 @@ def _load_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_run_seal(run_root: Path) -> Path:
+def compute_seal_obj(run_root: Path) -> Dict[str, Any]:
     """
-    Build SEAL.json inside run_root.
+    Compute the deterministic seal object for a run directory.
 
-    Seal model (deterministic, tamper-evident, NOT a signature):
+    IMPORTANT:
+      - This function is PURE (no file writes).
+      - This is tamper-evidence (NOT a signature).
+
+    Seal model:
       - Hash ALL files under run_root (recursive) in deterministic order,
         excluding: SEAL.json, payload.tar.gz, SHA256SUMS.txt
       - Also include component hashes of SHA256SUMS.txt and payload.tar.gz
-        when present (these are excluded from the recursive file set so they
-        remain explicit top-level components).
+        when present (explicit top-level components).
 
-    Result:
-      - SEAL.json contains:
-          - contract_version (copied from contract.json)
-          - sha256sums_hash (optional)
-          - payload_hash (optional)
-          - sealed_files (mapping of relpath -> sha256 for covered files)
-          - seal_hash (sha256 of concatenated hashes in deterministic order)
-
-    Any mutation to any covered file breaks the seal.
+    Returns:
+      A JSON-serializable dict containing:
+        - contract_version
+        - sha256sums_hash (optional)
+        - payload_hash (optional)
+        - sealed_files (mapping relpath -> sha256)
+        - seal_hash (sha256 of concatenated component hashes in deterministic order)
     """
 
     run_root = run_root.resolve()
@@ -97,8 +98,7 @@ def build_run_seal(run_root: Path) -> Path:
     if not isinstance(cv, str) or not cv.strip():
         raise ValueError("contract.json missing valid contract_version")
 
-    # Build a deterministic manifest of all files (excluding payload + SHA by design),
-    # then remove seal + optional files explicitly excluded from sealing.
+    # Deterministic manifest of run files (excludes payload + SHA by design).
     manifest = build_integrity_manifest(run_root)
 
     sealed_files: Dict[str, str] = {}
@@ -108,17 +108,17 @@ def build_run_seal(run_root: Path) -> Path:
             continue
         sealed_files[rel] = digest
 
-    # Explicit top-level components (excluded from sealed_files)
+    # Explicit components excluded from sealed_files
     sha_path = run_root / "SHA256SUMS.txt"
     sha256sums_hash: Optional[str] = _sha256_file(sha_path) if sha_path.exists() else None
 
     payload_path = run_root / "payload.tar.gz"
     payload_hash: Optional[str] = _sha256_file(payload_path) if payload_path.exists() else None
 
-    # Deterministic seal hash construction:
-    #  - include sealed file hashes ordered by path
-    #  - then include sha256sums_hash (if present)
-    #  - then include payload_hash (if present)
+    # Deterministic seal hash:
+    #  1) sealed file hashes ordered by path
+    #  2) sha256sums_hash (if present)
+    #  3) payload_hash (if present)
     components = []
     for rel in sorted(sealed_files.keys()):
         components.append(sealed_files[rel])
@@ -130,7 +130,7 @@ def build_run_seal(run_root: Path) -> Path:
 
     seal_hash = hashlib.sha256("".join(components).encode("utf-8")).hexdigest()
 
-    seal_obj: Dict[str, Any] = {
+    return {
         "contract_version": cv,
         "sha256sums_hash": sha256sums_hash,
         "payload_hash": payload_hash,
@@ -138,6 +138,23 @@ def build_run_seal(run_root: Path) -> Path:
         "seal_hash": seal_hash,
     }
 
+
+def write_seal(run_root: Path, seal_obj: Mapping[str, Any]) -> Path:
+    """
+    Write SEAL.json deterministically.
+
+    This function performs I/O and is intended for finalize-time artifact
+    materialization, not verification.
+    """
+    run_root = run_root.resolve()
     seal_path = run_root / "SEAL.json"
-    seal_path.write_text(json.dumps(seal_obj, indent=2), encoding="utf-8")
+    seal_path.write_text(json.dumps(dict(seal_obj), indent=2), encoding="utf-8")
     return seal_path
+
+
+def build_run_seal(run_root: Path) -> Path:
+    """
+    Backward-compatible wrapper: compute + write SEAL.json.
+    """
+    seal_obj = compute_seal_obj(run_root)
+    return write_seal(run_root, seal_obj)
