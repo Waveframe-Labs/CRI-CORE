@@ -1,0 +1,5 @@
+{
+  "run_id": "TEST-RUN-003",
+  "approver": { "id": "bob", "type": "human" },
+  "approved_at_utc": "2026-02-27T00:00:00Z"
+}
