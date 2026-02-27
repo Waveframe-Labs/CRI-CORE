@@ -4,11 +4,11 @@ title: "CRI-CORE Integrity Finalization Writer Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-11"
-updated: "2026-02-11"
+updated: "2026-02-27"
 
 author:
   name: "Shawn C. Wright"
@@ -26,13 +26,12 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted test scaffolding to verify integrity finalization artifacts are written and structurally correct."
 
 dependencies:
   - "../../src/cricore/integrity/finalize.py"
 
 anchors:
-  - "CRI-CORE-IntegrityFinalizationWriterTest-v0.1.0"
+  - "CRI-CORE-IntegrityFinalizationWriterTest-v0.2.0"
 ---
 """
 
@@ -57,17 +56,20 @@ def test_finalize_run_integrity_writes_expected_artifacts(tmp_path: Path):
     run_root = tmp_path / "TEST-RUN-001"
     shutil.copytree(fixture, run_root)
 
-    sha_path, payload_path = finalize_run_integrity(run_root)
+    sha_path, payload_path, seal_path = finalize_run_integrity(run_root)
 
+    # --- Artifact existence ---
     assert sha_path.exists()
     assert payload_path.exists()
+    assert seal_path.exists()
+    assert seal_path.name == "SEAL.json"
 
-    # SHA file should not be empty and should include known entries
+    # --- SHA256SUMS validation ---
     sha_text = sha_path.read_text(encoding="utf-8")
     assert "contract.json" in sha_text
     assert "report.md" in sha_text
 
-    # Payload should be a readable tar.gz containing required files
+    # --- Payload validation ---
     data = payload_path.read_bytes()
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:
         names = tar.getnames()
@@ -76,3 +78,4 @@ def test_finalize_run_integrity_writes_expected_artifacts(tmp_path: Path):
     assert "report.md" in names
     assert "SHA256SUMS.txt" not in names
     assert "payload.tar.gz" not in names
+    assert "SEAL.json" not in names
