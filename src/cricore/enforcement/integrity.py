@@ -4,8 +4,8 @@ title: "CRI-CORE Integrity and Provenance Enforcement Stages"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.2"
-doi: "TBD-0.4.2"
+version: "0.4.3"
+doi: "TBD-0.4.3"
 status: "Active"
 created: "2026-02-10"
 updated: "2026-02-27"
@@ -32,10 +32,11 @@ dependencies:
   - "../errors.py"
   - "../integrity/finalize.py"
   - "../integrity/seal.py"
+  - "../integrity/binding.py"
 
 anchors:
-  - "CRI-CORE-IntegrityStage-v0.4.2"
-  - "CRI-CORE-IntegrityFinalizationStage-v0.4.2"
+  - "CRI-CORE-IntegrityStage-v0.4.3"
+  - "CRI-CORE-IntegrityFinalizationStage-v0.4.3"
 ---
 """
 
@@ -48,6 +49,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from ..errors import FailureClass
+from ..integrity.binding import compute_binding_obj
 from ..integrity.finalize import finalize_run_integrity
 from ..integrity.seal import compute_seal_obj
 from ..results.stage import StageResult
@@ -111,11 +113,48 @@ def _contract_at_least(contract_version: str, minimum: str) -> bool:
     return _version_tuple(contract_version) >= _version_tuple(minimum)
 
 
+def _verify_binding_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
+    """
+    Verify binding.json without mutating the run directory.
+    """
+    binding_path = run_root / "binding.json"
+    if not binding_path.exists():
+        return False, ["binding.json missing"]
+
+    try:
+        stored = json.loads(binding_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return False, [f"binding.json invalid JSON: {exc}"]
+
+    stored_hash = stored.get("binding_hash")
+    if not isinstance(stored_hash, str) or not stored_hash:
+        return False, ["binding.json missing binding_hash"]
+
+    try:
+        expected = compute_binding_obj(run_root)
+    except Exception as exc:
+        return False, [f"binding recomputation failed: {exc}"]
+
+    expected_hash = expected.get("binding_hash")
+    if not isinstance(expected_hash, str) or not expected_hash:
+        return False, ["recomputed binding missing binding_hash"]
+
+    if expected_hash != stored_hash:
+        return False, ["binding mismatch: binding_hash does not match recomputed value"]
+
+    # Minimal structural sanity checks: if present in stored, ensure it matches expected
+    # (This avoids accidental acceptance of a structurally malformed binding.json.)
+    for k in ("contract_version", "contract_hash", "claim_ref", "claim_hash", "approval_hash"):
+        if k in stored and stored.get(k) != expected.get(k):
+            return False, [f"binding mismatch: {k} does not match recomputed value"]
+
+    return True, []
+
+
 def _verify_seal_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
     """
     Verify SEAL.json without mutating the run directory.
     """
-
     seal_path = run_root / "SEAL.json"
     if not seal_path.exists():
         return False, ["SEAL.json missing"]
@@ -153,14 +192,16 @@ def run_integrity_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
-    finalize: bool = False,
+    finalize: bool = False,  # backward compatibility only; canonical pipeline uses finalization stage
 ) -> StageResult:
     """
     Structural + cryptographic integrity verification.
 
-    - run_context structure validation
+    - run_context integrity section validation
     - SHA256SUMS verification (strict when present)
-    - SEAL.json verification when contract_version >= 0.3.0
+    - For contract_version >= 0.3.0:
+        - binding.json required and verified (non-mutating)
+        - SEAL.json required and verified (non-mutating)
     """
 
     messages: list[str] = []
@@ -215,21 +256,26 @@ def run_integrity_stage(
                 messages.append(f"hash mismatch: {rel_path}")
                 failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # --- Seal verification (version-gated) ---
+    # --- Version-gated binding + seal enforcement ---
 
     contract_version = _load_contract_version(run_root)
     if contract_version is not None:
         try:
             if _contract_at_least(contract_version, "0.3.0"):
-                ok, seal_msgs = _verify_seal_non_mutating(run_root)
-                if not ok:
-                    messages.extend(seal_msgs)
+                ok_b, b_msgs = _verify_binding_non_mutating(run_root)
+                if not ok_b:
+                    messages.extend(b_msgs)
+                    failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+
+                ok_s, s_msgs = _verify_seal_non_mutating(run_root)
+                if not ok_s:
+                    messages.extend(s_msgs)
                     failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
         except Exception as exc:
-            messages.append(f"seal verification error: {exc}")
+            messages.append(f"binding/seal verification error: {exc}")
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # Backward-compatible finalize hook (avoid in canonical pipeline)
+    # Backward-compatible finalization hook (avoid in canonical pipeline)
     if finalize and not failure_classes:
         try:
             finalize_run_integrity(run_root)
@@ -257,7 +303,7 @@ def run_integrity_stage(
 def run_integrity_finalization_stage(
     run_path: str,
     *,
-    run_context: Optional[Mapping[str, Any]] = None,
+    run_context: Optional[Mapping[str, Any]] = None,  # accepted for interface symmetry
     prerequisite_passed: bool = True,
 ) -> StageResult:
 
