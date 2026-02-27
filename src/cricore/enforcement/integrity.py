@@ -4,8 +4,8 @@ title: "CRI-CORE Integrity and Provenance Enforcement Stages"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.1"
-doi: "TBD-0.4.1"
+version: "0.4.2"
+doi: "TBD-0.4.2"
 status: "Active"
 created: "2026-02-10"
 updated: "2026-02-27"
@@ -34,8 +34,8 @@ dependencies:
   - "../integrity/seal.py"
 
 anchors:
-  - "CRI-CORE-IntegrityStage-v0.4.1"
-  - "CRI-CORE-IntegrityFinalizationStage-v0.4.1"
+  - "CRI-CORE-IntegrityStage-v0.4.2"
+  - "CRI-CORE-IntegrityFinalizationStage-v0.4.2"
 ---
 """
 
@@ -49,7 +49,7 @@ from typing import Any, Mapping, Optional
 
 from ..errors import FailureClass
 from ..integrity.finalize import finalize_run_integrity
-from ..integrity.seal import build_run_seal
+from ..integrity.seal import compute_seal_obj
 from ..results.stage import StageResult
 
 
@@ -59,18 +59,14 @@ from ..results.stage import StageResult
 
 
 def _compute_sha256(path: Path) -> str:
-    hasher = hashlib.sha256()
+    h = hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def _load_manifest(sha_path: Path) -> dict[str, str]:
-    """
-    Load SHA256SUMS.txt formatted as:
-      <sha256><whitespace><relative_path>
-    """
     if not sha_path.exists():
         raise FileNotFoundError("SHA256SUMS.txt missing")
 
@@ -115,15 +111,10 @@ def _contract_at_least(contract_version: str, minimum: str) -> bool:
     return _version_tuple(contract_version) >= _version_tuple(minimum)
 
 
-def _verify_seal(run_root: Path) -> tuple[bool, list[str]]:
+def _verify_seal_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
     """
-    Verify SEAL.json by recomputing the expected seal deterministically and
-    comparing seal_hash.
-
-    This is tamper-evidence (not a signature). Any mutation to any sealed file
-    breaks seal_hash.
+    Verify SEAL.json without mutating the run directory.
     """
-    messages: list[str] = []
 
     seal_path = run_root / "SEAL.json"
     if not seal_path.exists():
@@ -138,38 +129,23 @@ def _verify_seal(run_root: Path) -> tuple[bool, list[str]]:
     if not isinstance(stored_hash, str) or not stored_hash:
         return False, ["SEAL.json missing seal_hash"]
 
-    # Recompute expected seal by building it deterministically.
-    # NOTE: build_run_seal writes SEAL.json; we avoid mutating the run by:
-    #   - reading stored bytes first
-    #   - building expected (which will overwrite identical contents if valid)
-    # This is acceptable for verification because:
-    #   - canonical pipelines treat seal as derived
-    #   - a mismatch will still be detected and reported
-    #
-    # If you later want a strict non-mutating verifier, we can refactor build_run_seal
-    # into (compute_seal_obj + write_seal).
-    before_bytes = seal_path.read_bytes()
-
-    expected_path = build_run_seal(run_root)
-    expected = json.loads(expected_path.read_text(encoding="utf-8"))
+    try:
+        expected = compute_seal_obj(run_root)
+    except Exception as exc:
+        return False, [f"seal recomputation failed: {exc}"]
 
     expected_hash = expected.get("seal_hash")
     if not isinstance(expected_hash, str) or not expected_hash:
         return False, ["recomputed seal missing seal_hash"]
 
-    # Restore original file bytes to keep verification logically non-mutating,
-    # even though build_run_seal is a writer.
-    seal_path.write_bytes(before_bytes)
-
     if expected_hash != stored_hash:
-        messages.append("seal mismatch: seal_hash does not match recomputed value")
-        return False, messages
+        return False, ["seal mismatch: seal_hash does not match recomputed value"]
 
     return True, []
 
 
 # ---------------------------------------------------------------------
-# Stage 1 — Integrity Verification (non-mutating by contract intent)
+# Stage 1 — Integrity Verification
 # ---------------------------------------------------------------------
 
 
@@ -177,19 +153,14 @@ def run_integrity_stage(
     run_path: str,
     *,
     run_context: Optional[Mapping[str, Any]] = None,
-    finalize: bool = False,  # backward compatibility only; default must be non-mutating
+    finalize: bool = False,
 ) -> StageResult:
     """
     Structural + cryptographic integrity verification.
 
-    Contract:
-      - verifies integrity section presence/shape in run_context
-      - if SHA256SUMS.txt exists, verifies every listed file hash
-      - if contract_version >= 0.3.0, verifies SEAL.json is present and valid
-      - DOES NOT write artifacts unless finalize=True (backward compat)
-
-    NOTE: Canonical pipelines should call run_integrity_finalization_stage()
-          as a distinct stage instead of using finalize=True here.
+    - run_context structure validation
+    - SHA256SUMS verification (strict when present)
+    - SEAL.json verification when contract_version >= 0.3.0
     """
 
     messages: list[str] = []
@@ -197,7 +168,7 @@ def run_integrity_stage(
 
     run_root = Path(run_path).resolve()
 
-    # --- Structural validation (run_context) ---
+    # --- Structural run_context validation ---
 
     integrity = None
 
@@ -219,7 +190,7 @@ def run_integrity_stage(
         if any(m.startswith("integrity.") for m in messages):
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # --- Cryptographic verification: SHA256SUMS.txt (strict when present) ---
+    # --- SHA256SUMS verification ---
 
     sha_path = run_root / "SHA256SUMS.txt"
 
@@ -244,13 +215,13 @@ def run_integrity_stage(
                 messages.append(f"hash mismatch: {rel_path}")
                 failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # --- Seal verification (version-gated by declared contract_version) ---
+    # --- Seal verification (version-gated) ---
 
     contract_version = _load_contract_version(run_root)
     if contract_version is not None:
         try:
             if _contract_at_least(contract_version, "0.3.0"):
-                ok, seal_msgs = _verify_seal(run_root)
+                ok, seal_msgs = _verify_seal_non_mutating(run_root)
                 if not ok:
                     messages.extend(seal_msgs)
                     failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
@@ -258,7 +229,7 @@ def run_integrity_stage(
             messages.append(f"seal verification error: {exc}")
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
-    # backward-compatible finalization hook (avoid in canonical pipeline)
+    # Backward-compatible finalize hook (avoid in canonical pipeline)
     if finalize and not failure_classes:
         try:
             finalize_run_integrity(run_root)
@@ -279,22 +250,16 @@ def run_integrity_stage(
 
 
 # ---------------------------------------------------------------------
-# Stage 2 — Integrity Finalization (mutating)
+# Stage 2 — Integrity Finalization
 # ---------------------------------------------------------------------
 
 
 def run_integrity_finalization_stage(
     run_path: str,
     *,
-    run_context: Optional[Mapping[str, Any]] = None,  # accepted for interface symmetry
+    run_context: Optional[Mapping[str, Any]] = None,
     prerequisite_passed: bool = True,
 ) -> StageResult:
-    """
-    Materialize integrity artifacts.
-
-    IMPORTANT: This stage MUST NOT write if prerequisite_passed is False.
-    The pipeline should pass prerequisite_passed = (integrity stage passed).
-    """
 
     if not prerequisite_passed:
         return StageResult(
