@@ -3,11 +3,11 @@ title: "CRI-CORE Run Context Contract"
 filetype: "specification"
 type: "normative"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-10"
+updated: "2026-02-27"
 
 author:
   name: "Shawn C. Wright"
@@ -25,84 +25,81 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted drafting of a minimal structural ABI for the CRI-CORE run_context interface derived directly from the CRI-CORE Enforcement & Run Artifact Contract, under human authorship and final approval."
 
 dependencies:
   - "../CRI_CORE_ENFORCEMENT_CONTRACT.md"
 
 anchors:
-  - "CRI-CORE-RunContextContract-v0.1.0"
+  - "CRI-CORE-RunContextContract-v0.2.0"
 ---
 
 # CRI-CORE Run Context Contract
-### Normative interface for enforcement-stage inputs
 
----
+### Normative structural interface for enforcement inputs
+
+------------------------------------------------------------------------
 
 ## 1. Purpose
 
-This document defines the **run context contract** passed into CRI-CORE enforcement stages.
+This document defines the **run context contract** supplied to CRI-CORE
+enforcement stages.
 
-The run context is an explicit, structured input surface supplied by the orchestration layer
-(e.g. AWO execution or an equivalent system).
+The run context is a structured input provided by an external
+orchestration system.
 
-Its sole purpose is to provide **structural identity and provenance references**
-required for mechanical enforcement.
+Its sole purpose is to provide **structural identity and reference
+material** required for deterministic enforcement.
 
-This document defines:
+This contract defines:
 
-- what fields may be supplied to CRI-CORE, and
-- what structural guarantees those fields must satisfy.
+-   allowed top-level fields,
+-   required structural guarantees,
+-   and identity enforcement extensions aligned with CRI-CORE v0.5.x.
 
-This document does not define:
+This document does not define semantic meaning, workflow logic,
+governance authority, or epistemic interpretation.
 
-- epistemic meaning,
-- workflow semantics,
-- disclosure semantics,
-- governance authority,
-- or validation intent.
+------------------------------------------------------------------------
 
----
+## 2. Authority and Scope
 
-## 2. Authority and scope
+This contract derives authority from the CRI-CORE Enforcement Contract.
 
-This contract derives its authority exclusively from:
+It governs inputs provided to:
 
-- the CRI-CORE Enforcement & Run Artifact Contract
+-   independence stage
+-   integrity stage
+-   publication stage
 
-This contract applies only to:
+It does not modify contract-version-based invariants declared inside
+`contract.json`.
 
-- inputs provided to the following CRI-CORE enforcement stages:
+Contract-version enforcement remains authoritative and independent of
+run context.
 
-- independence stage
-- integrity & provenance stage
-- publication stage
+------------------------------------------------------------------------
 
----
+## 3. Structural Nature of Run Context
 
-## 3. Structural nature of the run context
-
-The run context is a structured data object provided to CRI-CORE at enforcement time.
+The run context SHALL be a JSON-serializable mapping.
 
 CRI-CORE SHALL:
 
-- treat all run context fields as opaque identifiers and references, and
-- evaluate only structural presence and equality relationships.
+-   treat all identifiers as opaque,
+-   evaluate only structural presence and equality,
+-   perform no semantic inference.
 
 CRI-CORE SHALL NOT:
 
-- infer semantics,
-- reinterpret identifiers,
-- resolve identity meaning,
-- or derive additional context.
+-   reinterpret identity meaning,
+-   resolve external references,
+-   weaken or override contract-version invariants.
 
----
+------------------------------------------------------------------------
 
-## 4. Top-level run context object
+## 4. Top-Level Structure
 
-The run context object SHALL be a JSON-serializable mapping with the following top-level fields:
-
-```json
+``` json
 {
   "identities": { ... },
   "integrity": { ... },
@@ -110,24 +107,21 @@ The run context object SHALL be a JSON-serializable mapping with the following t
 }
 ```
 
-All top-level sections are OPTIONAL.
+All sections are optional at the top level.
 
-A section is required only when the corresponding enforcement stage is executed.
+A section becomes required only if the corresponding enforcement stage
+executes.
 
----
+------------------------------------------------------------------------
 
-## 5. Identity context (independence stage)
+## 5. Identity Context (Independence Stage)
 
-### 5.1 Purpose
+### 5.1 Structure
 
-The identity context provides the structural identity material required for
-independence and non-circular validation enforcement.
-
-### 5.2 Structure
-
-```json
+``` json
 {
   "identities": {
+    "required_roles": ["orchestrator", "reviewer"],
     "orchestrator": {
       "id": "string",
       "type": "string"
@@ -141,62 +135,56 @@ independence and non-circular validation enforcement.
 }
 ```
 
----
+------------------------------------------------------------------------
 
-### 5.3 Field definitions
+### 5.2 Structural Requirements
 
-#### identities.orchestrator
+If the independence stage executes:
 
-- REQUIRED for independence enforcement.
-- Structure:
+-   `identities` MUST be present.
+-   `orchestrator` MUST be present.
+-   `reviewer` MUST be present.
 
-```
-id   : string
-type : string
-```
+Each identity MUST contain:
 
-The `id` field MUST be a stable identifier string.
+-   `id` (string)
+-   `type` (string)
 
-The `type` field MUST declare the structural identity category
-(for example: `human`, `service`, `workflow`, `organization`).
+Identity equality is determined solely by structural equality of
+`(id, type)`.
 
-CRI-CORE SHALL treat the `(id, type)` pair as an opaque identifier.
+------------------------------------------------------------------------
 
----
+### 5.3 Required Roles Extension
 
-#### identities.reviewer
+If `identities.required_roles` is present:
 
-Same structure and requirements as `identities.orchestrator`.
+-   It MUST be a list of role names.
+-   Each listed role MUST be present as a valid identity mapping.
+-   No identity may satisfy more than one listed required role.
+-   Failure to satisfy declared required roles SHALL cause independence
+    failure.
 
----
+If `required_roles` is absent:
 
-#### identities.self_approval_override
+-   CRI-CORE enforces only minimal orchestrator/reviewer separation.
 
-- OPTIONAL.
-- Boolean.
-- Defaults to false if omitted.
+------------------------------------------------------------------------
 
-This field declares an explicit override of the self-approval prohibition.
+### 5.4 Self-Approval Rule
 
-CRI-CORE SHALL only evaluate the presence and boolean value of this field.
+If orchestrator and reviewer are structurally equal:
 
----
+-   Enforcement SHALL fail unless `self_approval_override` is true.
+-   Overrides SHALL be recorded as structural exceptions.
 
-## 6. Integrity and provenance context
+------------------------------------------------------------------------
 
-### 6.1 Purpose
+## 6. Integrity Context
 
-The integrity context provides references required for integrity and provenance
-enforcement.
+### 6.1 Structure
 
-This contract does not define artifact formats, hashing mechanisms, or signature
-schemes.
-
----
-
-### 6.2 Structure
-
-```json
+``` json
 {
   "integrity": {
     "workflow_execution_ref": "string",
@@ -206,57 +194,22 @@ schemes.
 }
 ```
 
----
+All fields are optional.
 
-### 6.3 Field definitions
+If provided, each MUST be a string.
 
-#### integrity.workflow_execution_ref
+CRI-CORE treats all values as opaque references.
 
-- OPTIONAL.
-- String.
+This section does not weaken contract-version-dependent invariants such
+as binding.json or SEAL.json requirements.
 
-A stable reference to the workflow execution instance that produced the run.
+------------------------------------------------------------------------
 
-CRI-CORE SHALL treat this value as an opaque reference.
+## 7. Publication Context
 
----
+### 7.1 Structure
 
-#### integrity.run_payload_ref
-
-- OPTIONAL.
-- String.
-
-A stable reference to the finalized run payload archive.
-
-CRI-CORE SHALL treat this value as an opaque reference.
-
----
-
-#### integrity.attestation_ref
-
-- OPTIONAL.
-- String.
-
-A stable reference to the attestation material associated with the run.
-
-CRI-CORE SHALL treat this value as an opaque reference.
-
----
-
-## 7. Publication context
-
-### 7.1 Purpose
-
-The publication context provides references required for publication and commit
-binding enforcement.
-
-This contract does not define repository semantics or publication policy.
-
----
-
-### 7.2 Structure
-
-```json
+``` json
 {
   "publication": {
     "repository_ref": "string",
@@ -265,68 +218,39 @@ This contract does not define repository semantics or publication policy.
 }
 ```
 
----
+All fields are optional.
 
-### 7.3 Field definitions
+If provided, each MUST be a string.
 
-#### publication.repository_ref
+Values are treated as opaque references.
 
-- OPTIONAL.
-- String.
+------------------------------------------------------------------------
 
-A stable reference to the governing repository.
+## 8. Structural Constraints
 
-CRI-CORE SHALL treat this value as an opaque reference.
+CRI-CORE SHALL enforce:
 
----
+-   structural presence of required identity mappings,
+-   strict separation when required_roles is declared,
+-   no identity serving multiple required roles,
+-   no inference or semantic expansion of references,
+-   no override of contract-version enforcement rules.
 
-#### publication.commit_ref
+------------------------------------------------------------------------
 
-- OPTIONAL.
-- String.
+## 9. Versioning
 
-A stable reference to the commit that published the run artifact and its
-associated governance material.
+This contract is independently versioned.
 
-CRI-CORE SHALL treat this value as an opaque reference.
+CRI-CORE SHALL declare which run context contract version it expects.
 
----
+Multiple versions MAY coexist.
 
-## 8. Structural constraints
+Historical runs SHALL be interpreted under their declared contract
+version.
 
-CRI-CORE SHALL apply the following structural constraints only:
+------------------------------------------------------------------------
 
-- identity equality is evaluated solely by structural equality of `(id, type)`
-- missing required sections SHALL cause the corresponding enforcement stage to fail
-- no inference, normalization, or resolution of references is permitted
-
----
-
-## 9. Explicit non-goals
-
-This contract SHALL NOT define:
-
-- what constitutes a valid reviewer,
-- what constitutes a valid workflow,
-- what constitutes sufficient provenance,
-- what constitutes a valid publication,
-- or what constitutes adequate independence.
-
-All such semantics belong to upstream layers.
-
----
-
-## 10. Versioning
-
-This run context contract is versioned independently.
-
-CRI-CORE enforcement logic SHALL declare which version of this contract it expects.
-
-Backward compatibility and coexistence follow the CRI-CORE enforcement contract
-versioning rules.
-
----
-
-<div align="center">
-  <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
-</div>  
+::: {align="center"}
+`<sub>`{=html}© 2026 Waveframe Labs`</sub>`{=html}
+:::
