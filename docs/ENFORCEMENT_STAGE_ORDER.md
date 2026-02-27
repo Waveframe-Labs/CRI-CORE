@@ -3,10 +3,10 @@ title: "CRI-CORE Canonical Enforcement Stage Order"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
+version: "0.2.0"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-02-19"
+updated: "2026-02-27"
 license: "Apache-2.0"
 ---
 
@@ -16,12 +16,37 @@ The CRI-CORE enforcement pipeline executes the following stages in fixed, normat
 
 1. run-structure
 2. structure-contract-version-gate
-3. lifecycle-contract-conformity
-4. independence
-5. integrity
-6. integrity-finalization
-7. publication
-8. publication-commit
+3. independence
+4. integrity
+5. integrity-finalization
+6. publication
+7. publication-commit
+
+## Stage Semantics (Normative Summary)
+
+- **run-structure**  
+  Validates structural conformity of the run artifact against the declared contract.
+
+- **structure-contract-version-gate**  
+  Enforces expected contract version alignment.
+
+- **independence**  
+  Enforces structural role separation and override constraints.
+
+- **integrity**  
+  Performs non-mutating verification of:
+  - SHA256SUMS (when present)
+  - binding.json (required for contract_version ≥ 0.3.0)
+  - SEAL.json (required for contract_version ≥ 0.3.0)
+
+- **integrity-finalization**  
+  Materializes deterministic integrity artifacts (mutating stage).
+
+- **publication**  
+  Validates publication references and structural publication invariants.
+
+- **publication-commit**  
+  The sole commit gate.
 
 ## Normative Guarantees
 
