@@ -1,0 +1,7 @@
+{
+  "claim_id": "CLAIM-001",
+  "type": "test",
+  "payload": {
+    "description": "Minimal structural claim for binding verification."
+  }
+}
