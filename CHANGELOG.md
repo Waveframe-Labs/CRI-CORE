@@ -6,6 +6,23 @@ This project follows semantic versioning (0.x pre-stable).
 
 ---
 
+## [0.6.0] – 2026-03-02
+
+### Added
+- First public PyPI distribution of CRI-CORE
+- Explicit runtime version exposure via `cricore.__version__`
+- Hardened packaging metadata (classifiers, keywords, project URLs)
+
+### Changed
+- Version bump to establish public release baseline
+
+### Compatibility
+- No changes to enforcement pipeline interface
+- No changes to stage semantics
+- Backwards compatible with v0.5.0 contract behavior
+
+---
+
 ## [0.5.0] – 2026-02-27
 
 ### Added
