@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.5.0"
+version: "0.6.0"
 doi: "TBD"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-02-27"
+updated: "2026-03-02"
 
 author:
   name: "Shawn C. Wright"
@@ -29,16 +29,16 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.5.0"
+  - "CRI-CORE v0.6.0"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.5.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.6.0 --- Deterministic Enforcement Kernel**
 
-CRI-CORE is a deterministic enforcement engine for structural run
-admissibility and atomic commit gating.
+CRI-CORE is a deterministic structural enforcement engine for governed
+state transitions.
 
 It evaluates a run directory against explicit structural, authority,
 integrity, binding, sealing, and publication constraints and returns a
@@ -46,6 +46,39 @@ single authoritative mutation decision.
 
 The kernel does not interpret meaning.\
 It evaluates structure and invariants only.
+
+------------------------------------------------------------------------
+
+## Installation
+
+Install from PyPI:
+
+    pip install cricore
+
+Requires Python 3.10+.
+
+------------------------------------------------------------------------
+
+## Minimal Usage
+
+The supported public entrypoint is:
+
+    from cricore.enforcement.execution import run_enforcement_pipeline
+
+Example:
+
+    from cricore.enforcement.execution import run_enforcement_pipeline
+
+    results, commit_allowed = run_enforcement_pipeline(
+        run_path=".",
+        expected_contract_version="0.3.0"
+    )
+
+The function returns:
+
+    (results: List[StageResult], commit_allowed: bool)
+
+`commit_allowed` is the sole commit authorization signal.
 
 ------------------------------------------------------------------------
 
@@ -62,9 +95,9 @@ sealed runs are permitted to mutate governed state.
 
 ------------------------------------------------------------------------
 
-## Enforcement Pipeline (v0.5.0)
+## Enforcement Pipeline (v0.6.0)
 
-The canonical stage order:
+Canonical stage order:
 
 1.  run-structure\
 2.  structure-contract-version-gate\
@@ -74,11 +107,7 @@ The canonical stage order:
 6.  publication\
 7.  publication-commit
 
-The pipeline returns:
-
-    (results: List[StageResult], commit_allowed: bool)
-
-`commit_allowed` is the sole commit authorization signal.
+The pipeline is deterministic and ordered.
 
 ------------------------------------------------------------------------
 
@@ -86,13 +115,12 @@ The pipeline returns:
 
 CRI-CORE enforces versioned structural guarantees:
 
--   For `contract_version < 0.3.0`
-    -   structural + independence + integrity manifest enforcement
--   For `contract_version ≥ 0.3.0`
-    -   binding.json required\
-    -   SEAL.json required\
-    -   strict cryptographic seal validation\
-    -   immutable artifact boundary enforcement
+For `contract_version < 0.3.0`: - Structural validation - Independence
+enforcement - Integrity manifest verification
+
+For `contract_version ≥ 0.3.0`: - binding.json required - SEAL.json
+required - Strict cryptographic seal validation - Immutable artifact
+boundary enforcement
 
 Enforcement meaning is isolated per declared contract version.\
 Historical runs are validated under their declared version.
@@ -103,8 +131,7 @@ Historical runs are validated under their declared version.
 
 The kernel enforces structural role separation:
 
--   Explicit orchestrator identity
--   Explicit reviewer identity
+-   Explicit actor identities
 -   Optional declared role requirements (`required_roles`)
 -   Strict prohibition on multi-role identity when roles are required
 -   Explicit override pathway (recorded, never implicit)
@@ -114,7 +141,7 @@ It does not evaluate competence or review quality.
 
 ------------------------------------------------------------------------
 
-## Cryptographic Guarantees (v0.5.0)
+## Cryptographic Guarantees
 
 Finalized runs must include:
 
@@ -127,13 +154,12 @@ The seal covers:
 
 -   All run files (deterministic ordering)
 -   Binding artifact
--   Transition / rejection logs (when present)
 -   Manifest hash
 -   Payload hash
 
 Any mutation changes the seal hash.
 
-The seal is tamper-evidence.\
+The seal provides tamper evidence.\
 It is not a signature.
 
 ------------------------------------------------------------------------
@@ -158,10 +184,9 @@ It does not enforce it outside its invocation boundary.
 CRI-CORE does not:
 
 -   Interpret lifecycle semantics
--   Judge correctness of claims
+-   Judge correctness of domain objects
 -   Evaluate epistemic sufficiency
--   Enforce governance policy
--   Define disclosure meaning
+-   Enforce governance policy meaning
 -   Perform distributed consensus
 -   Prevent bypass outside invocation
 
@@ -202,12 +227,13 @@ It is domain-agnostic.
 
 ## Status
 
-v0.5.0 represents hardened structural enforcement with:
+v0.6.0 represents the first public PyPI distribution of CRI-CORE.
 
--   Binding enforcement
--   Seal enforcement
--   Strict role separation
--   Version-isolated invariants
+The enforcement interface is stable within the 0.x series but may evolve
+prior to 1.0.
 
-The interface is considered stable within the 0.x series but may evolve
-before 1.0.
+---
+
+<div align="center">
+  <sub>© 2025 Waveframe Labs — Independent Open-Science Research Entity • Governed under the Aurora Research Initiative (ARI)</sub>
+</div>
