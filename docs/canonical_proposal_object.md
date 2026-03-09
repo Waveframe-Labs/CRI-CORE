@@ -77,6 +77,8 @@ The kernel does not need to understand financial semantics, research semantics, 
 
 The Canonical Proposal Object is intended to satisfy five goals.
 
+Version 0.1.0 uses explicit field closure. Unless a field is declared in the schema, it is not part of the canonical proposal object.
+
 ### 1. Stable Enforcement Input
 
 The object provides a repeatable, versionable input structure for the kernel. This allows runners, demos, and downstream systems to target a defined proposal format rather than relying on ad hoc payload construction.
