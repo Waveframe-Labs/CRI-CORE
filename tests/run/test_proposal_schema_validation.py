@@ -49,34 +49,53 @@ INVALID_FIXTURES = Path("tests/fixtures/proposals/invalid")
 
 @pytest.fixture(scope="module")
 def validator():
-    with SCHEMA_PATH.open() as f:
+    with SCHEMA_PATH.open(encoding="utf-8") as f:
         schema = json.load(f)
 
     Validator = jsonschema.validators.validator_for(schema)
     Validator.check_schema(schema)
 
-    return Validator(schema, format_checker=jsonschema.FormatChecker())
+    return Validator(
+        schema,
+        format_checker=jsonschema.FormatChecker()
+    )
 
 
 def load_json(path: Path):
-    with path.open() as f:
+    with path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
 def test_valid_proposals_pass_schema(validator):
-    for file in sorted(VALID_FIXTURES.glob("*.json")):
+    valid_files = sorted(VALID_FIXTURES.glob("*.json"))
+
+    assert valid_files, "No valid proposal fixtures found."
+
+    for file in valid_files:
         proposal = load_json(file)
 
         try:
             validator.validate(proposal)
         except jsonschema.ValidationError as e:
-            pytest.fail(f"{file} should be valid but failed validation:\n{e}")
+            pytest.fail(
+                f"{file} should be valid but failed schema validation:\n{e}"
+            )
 
 
 def test_invalid_proposals_fail_schema(validator):
-    for file in sorted(INVALID_FIXTURES.glob("*.json")):
+    invalid_files = sorted(INVALID_FIXTURES.glob("*.json"))
+
+    assert invalid_files, "No invalid proposal fixtures found."
+
+    for file in invalid_files:
         proposal = load_json(file)
 
-        with pytest.raises(jsonschema.ValidationError):
+        try:
             validator.validate(proposal)
-            
+        except jsonschema.ValidationError:
+            # Correct behavior — schema rejected the proposal
+            continue
+
+        pytest.fail(
+            f"{file} should have failed schema validation but passed."
+        )
