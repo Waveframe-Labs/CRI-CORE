@@ -59,7 +59,7 @@ def load_json(path: Path):
 
 
 def test_valid_proposals_pass_schema(proposal_schema):
-    for file in VALID_FIXTURES.glob("*.json"):
+    for file in sorted(VALID_FIXTURES.glob("*.json")):
         proposal = load_json(file)
 
         try:
@@ -69,8 +69,12 @@ def test_valid_proposals_pass_schema(proposal_schema):
 
 
 def test_invalid_proposals_fail_schema(proposal_schema):
-    for file in INVALID_FIXTURES.glob("*.json"):
+    for file in sorted(INVALID_FIXTURES.glob("*.json")):
         proposal = load_json(file)
 
-        with pytest.raises(jsonschema.ValidationError):
+        try:
             jsonschema.validate(instance=proposal, schema=proposal_schema)
+        except jsonschema.ValidationError:
+            continue
+
+        pytest.fail(f"{file} should have failed schema validation but passed.")
