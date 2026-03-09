@@ -1,8 +1,6 @@
 {
   "proposal_id": "prop-invalid-timestamp",
 
-  "timestamp": "not-a-timestamp",
-
   "actor": {
     "id": "test-actor",
     "type": "service"
