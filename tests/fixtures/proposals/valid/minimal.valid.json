@@ -1,0 +1,27 @@
+{
+  "proposal_id": "prop-test-001",
+  "timestamp": "2026-03-09T15:42:00Z",
+
+  "actor": {
+    "id": "test-runner",
+    "type": "workflow"
+  },
+
+  "contract": {
+    "id": "test-contract",
+    "version": "0.1.0"
+  },
+
+  "requested_mutation": {
+    "domain": "test",
+    "resource": "example-resource",
+    "action": "mutate"
+  },
+
+  "artifacts": [
+    {
+      "path": "example.txt",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}
