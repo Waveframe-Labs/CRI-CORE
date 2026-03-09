@@ -87,6 +87,7 @@
       "type": "array",
       "description": "Artifacts associated with the proposal run.",
       "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "object",
         "required": ["path", "sha256"],
@@ -112,7 +113,11 @@
         },
         "reviewers": {
           "type": "array",
-          "items": { "type": "string" }
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
