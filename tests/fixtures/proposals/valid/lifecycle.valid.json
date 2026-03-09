@@ -1,0 +1,44 @@
+{
+  "proposal_id": "proposal-001",
+  "timestamp": "2026-03-09T12:00:00Z",
+
+  "actor": {
+    "id": "claim-lifecycle-demo-runner",
+    "type": "workflow",
+    "declared_role": "proposer"
+  },
+
+  "contract": {
+    "id": "claim-lifecycle-policy",
+    "version": "0.1.0"
+  },
+
+  "requested_mutation": {
+    "domain": "claim-lifecycle",
+    "resource": "claim-001",
+    "action": "transition",
+    "stage": "proposed"
+  },
+
+  "artifacts": [
+    {
+      "path": "proposals/proposal-001.yaml",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "path": "claims/claim-001.yaml",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "path": "evidence/ev-001-proposed.yaml",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+
+  "run_context": {
+    "orchestrator": "alice",
+    "reviewers": [
+      "bob"
+    ]
+  }
+}
