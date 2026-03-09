@@ -15,7 +15,7 @@
 
   "requested_mutation": {
     "domain": "claim-lifecycle",
-    "resource": "claim-001",
+    "resource": "claim",
     "action": "transition",
     "stage": "proposed"
   },
