@@ -14,7 +14,13 @@ authors = [
     { name = "Shawn C. Wright", email = "swright@waveframelabs.org" }
 ]
 
-keywords = ["governance", "enforcement", "deterministic", "reproducibility", "separation-of-duties"]
+keywords = [
+    "governance",
+    "enforcement",
+    "deterministic",
+    "reproducibility",
+    "separation-of-duties"
+]
 
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -25,10 +31,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.12"
 ]
 
 dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "jsonschema>=4"
+]
 
 [project.urls]
 Homepage = "https://waveframelabs.org"
