@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waveframelabs.org/schemas/cricore-proposal-0.1.0.json",
+  "title": "CRI-CORE Canonical Proposal Object",
+  "description": "Canonical mutation proposal envelope evaluated by the CRI-CORE enforcement pipeline.",
+  "type": "object",
+
+  "required": [
+    "proposal_id",
+    "timestamp",
+    "actor",
+    "contract",
+    "requested_mutation",
+    "artifacts"
+  ],
+
+  "properties": {
+
+    "proposal_id": {
+      "type": "string",
+      "description": "Unique identifier for the mutation proposal."
+    },
+
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the proposal was created."
+    },
+
+    "actor": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the proposing actor."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ai_system", "human", "workflow", "service"]
+        },
+        "declared_role": {
+          "type": "string",
+          "description": "Role declared by the proposing actor."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "contract": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier for the governance contract."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "requested_mutation": {
+      "type": "object",
+      "required": ["domain", "resource", "action"],
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "artifacts": {
+      "type": "array",
+      "description": "Artifacts associated with the proposal run.",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "run_context": {
+      "type": "object",
+      "description": "Optional execution context used for responsibility enforcement.",
+      "properties": {
+        "orchestrator": {
+          "type": "string"
+        },
+        "reviewers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+
+  },
+
+  "additionalProperties": false
+}
