@@ -1,0 +1,26 @@
+{
+  "proposal_id": "prop-test-missing-requested-mutation",
+  "timestamp": "2026-03-09T12:00:00Z",
+
+  "actor": {
+    "id": "test-runner",
+    "type": "workflow"
+  },
+
+  "contract": {
+    "id": "test-contract",
+    "version": "0.1.0"
+  },
+
+  "requested_mutation": {
+    "domain": "test",
+    "resource": "example-resource"
+  },
+
+  "artifacts": [
+    {
+      "path": "example.txt",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}
