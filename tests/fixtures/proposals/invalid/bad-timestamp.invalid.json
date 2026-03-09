@@ -1,26 +1,27 @@
 {
-  "proposal_id": "prop-test-bad-timestamp",
-  "timestamp": "03-09-2026 12:00",
+  "proposal_id": "prop-invalid-timestamp",
+
+  "timestamp": "not-a-timestamp",
 
   "actor": {
-    "id": "test-runner",
-    "type": "workflow"
+    "id": "test-actor",
+    "type": "service"
   },
 
   "contract": {
     "id": "test-contract",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
 
   "requested_mutation": {
     "domain": "test",
-    "resource": "example-resource",
-    "action": "mutate"
+    "resource": "object",
+    "action": "update"
   },
 
   "artifacts": [
     {
-      "path": "example.txt",
+      "path": "artifact.txt",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     }
   ]
