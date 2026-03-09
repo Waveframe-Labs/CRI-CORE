@@ -160,14 +160,17 @@ prop-2026-03-05-001
 
 ## `timestamp`
 
-An ISO-8601 timestamp representing when the proposal was created.
+An RFC3339 UTC timestamp representing when the proposal was created.
 
-This field provides temporal grounding for the proposal record and helps
-preserve ordering and replay context.
+The timestamp must be expressed in the following format:
 
-Example intent:
+YYYY-MM-DDTHH:MM:SSZ
+
+Example:
 
 2026-03-05T15:42:00Z
+
+Time zone offsets and fractional seconds are not permitted in v0.1.0 in order to preserve deterministic replay and ordering guarantees across enforcement environments.
 
 ------------------------------------------------------------------------
 

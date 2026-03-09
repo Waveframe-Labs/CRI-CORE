@@ -1,6 +1,8 @@
 {
   "proposal_id": "prop-invalid-timestamp",
 
+  "timestamp": "2026/03/09 10:15:00",
+
   "actor": {
     "id": "test-actor",
     "type": "service"
