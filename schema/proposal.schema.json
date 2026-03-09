@@ -86,6 +86,7 @@
     "artifacts": {
       "type": "array",
       "description": "Artifacts associated with the proposal run.",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": ["path", "sha256"],
