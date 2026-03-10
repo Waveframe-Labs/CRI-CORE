@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Execution Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.3.1"
-doi: "TBD-0.3.1"
+version: "0.3.2"
+doi: "TBD-0.3.2"
 status: "Active"
 created: "2026-02-11"
-updated: "2026-02-19"
+updated: "2026-03-09"
 
 author:
   name: "Shawn C. Wright"
@@ -26,14 +26,13 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted update to reflect explicit commit_allowed return semantics."
 
 dependencies:
   - "../../src/cricore/enforcement/execution.py"
   - "../../src/cricore/results/stage.py"
 
 anchors:
-  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.3.1"
+  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.3.2"
 ---
 """
 
@@ -78,7 +77,6 @@ def test_enforcement_pipeline_executes_all_stages_in_order(tmp_path: Path):
         run_context=run_context,
     )
 
-    # 8 stages now
     assert len(results) == 7
 
     assert [r.stage_id for r in results] == [
@@ -93,3 +91,4 @@ def test_enforcement_pipeline_executes_all_stages_in_order(tmp_path: Path):
 
     # commit_allowed should match publication-commit stage
     assert commit_allowed == results[-1].passed
+    
