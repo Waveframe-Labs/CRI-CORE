@@ -4,11 +4,11 @@ title: "CRI-CORE Canonical Stage Identifiers"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.1.1"
+doi: "TBD-0.1.1"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-02-19"
+updated: "2026-03-09"
 
 author:
   name: "Shawn C. Wright"
@@ -25,17 +25,16 @@ copyright:
   holder: "Waveframe Labs"
   year: "2026"
 
-ai_assisted: "none"
+ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-StageIDs-v0.1.0"
+  - "CRI-CORE-StageIDs-v0.1.1"
 ---
 """
 
 class StageID:
     RUN_STRUCTURE = "run-structure"
     VERSION_GATE = "structure-contract-version-gate"
-    LIFECYCLE = "lifecycle-contract-conformity"
     INDEPENDENCE = "independence"
     INTEGRITY = "integrity"
     INTEGRITY_FINALIZATION = "integrity-finalization"
@@ -46,7 +45,6 @@ class StageID:
 CANONICAL_STAGE_ORDER = [
     StageID.RUN_STRUCTURE,
     StageID.VERSION_GATE,
-    StageID.LIFECYCLE,
     StageID.INDEPENDENCE,
     StageID.INTEGRITY,
     StageID.INTEGRITY_FINALIZATION,

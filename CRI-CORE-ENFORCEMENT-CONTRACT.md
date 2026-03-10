@@ -3,10 +3,10 @@ title: "CRI-CORE Enforcement Contract"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.5.0"
+version: "0.5.1"
 status: "Active"
 created: "2026-02-27"
-updated: "2026-02-27"
+updated: "2026-03-09"
 license: "Apache-2.0"
 
 author:
@@ -21,10 +21,10 @@ maintainer:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.5.0"
+  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.5.1"
 ---
 
-# CRI-CORE Enforcement Contract (v0.5.0)
+# CRI-CORE Enforcement Contract (v0.5.1)
 
 ## 1. Scope
 
@@ -34,13 +34,14 @@ It enforces:
 
 - Run structure requirements
 - Contract version gating
-- Lifecycle conformity
 - Identity independence and role separation
 - Cryptographic integrity
 - Binding invariants
 - Repository publication gating
 
 It does not interpret claim content, evaluate correctness, or enforce domain semantics.
+
+It does not enforce lifecycle conformity as part of the canonical kernel runtime.
 
 Passing CRI-CORE indicates structural compliance only.
 
@@ -52,14 +53,13 @@ The pipeline executes in the following normative order:
 
 1. run-structure
 2. structure-contract-version-gate
-3. lifecycle-contract-conformity
-4. independence
-5. integrity
-6. integrity-finalization
-7. publication
-8. publication-commit
+3. independence
+4. integrity
+5. integrity-finalization
+6. publication
+7. publication-commit
 
-No stage may be skipped.
+The canonical stages are emitted in deterministic order.
 
 `publication-commit` defines `commit_allowed`.
 
