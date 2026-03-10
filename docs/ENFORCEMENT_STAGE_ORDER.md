@@ -3,10 +3,10 @@ title: "CRI-CORE Canonical Enforcement Stage Order"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.2.0"
+version: "0.2.1"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-02-27"
+updated: "2026-03-09"
 license: "Apache-2.0"
 ---
 
@@ -50,9 +50,8 @@ The CRI-CORE enforcement pipeline executes the following stages in fixed, normat
 
 ## Normative Guarantees
 
-- All stages are emitted in order.
-- No stage may be skipped.
-- Later stages may be blocked by prior failures.
+- All canonical stages are emitted in deterministic order.
+- Later stages may return non-passing results if prior invariants fail.
 - `publication-commit` is the sole commit gate.
 - `commit_allowed` is defined as the pass state of `publication-commit`.
 
