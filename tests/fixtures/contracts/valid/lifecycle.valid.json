@@ -1,0 +1,37 @@
+{
+  "contract_id": "claim-lifecycle-policy",
+  "contract_version": "0.1.0",
+
+  "authority_requirements": {
+    "proposer_role": "proposer",
+    "reviewer_roles": [
+      "reviewer",
+      "approver"
+    ],
+    "separation_of_duties": true
+  },
+
+  "artifact_requirements": {
+    "required_artifacts": [
+      "proposal",
+      "approval"
+    ]
+  },
+
+  "stage_requirements": {
+    "allowed_transitions": [
+      {
+        "from": "proposed",
+        "to": "supported"
+      },
+      {
+        "from": "supported",
+        "to": "superseded"
+      }
+    ]
+  },
+
+  "invariants": {
+    "separation_of_duties": true
+  }
+}

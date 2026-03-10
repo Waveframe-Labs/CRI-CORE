@@ -1,0 +1,5 @@
+{
+  "contract_id": "test-contract",
+  "contract_version": "0.1.0",
+  "unexpected_field": true
+}

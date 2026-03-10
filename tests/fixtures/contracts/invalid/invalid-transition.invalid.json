@@ -1,0 +1,12 @@
+{
+  "contract_id": "lifecycle-contract",
+  "contract_version": "0.1.0",
+
+  "stage_requirements": {
+    "allowed_transitions": [
+      {
+        "from": "proposed"
+      }
+    ]
+  }
+}
