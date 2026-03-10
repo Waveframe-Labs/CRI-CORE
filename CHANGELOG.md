@@ -38,6 +38,36 @@ This project follows semantic versioning (0.x pre-stable).
 
 ---
 
+## [0.7.1] – 2026-03-10
+
+### Fixed
+- Resolved specification/runtime drift in the canonical enforcement pipeline definition.
+- Removed non-executed `lifecycle-contract-conformity` stage from canonical stage identifiers.
+- Aligned enforcement contract documentation with the actual 7-stage runtime pipeline.
+- Updated canonical stage order documentation to match runtime behavior.
+- Corrected stale test commentary referencing an 8-stage pipeline.
+- Clarified compiled contract interface as an external governance artifact rather than a direct CRI-CORE runtime input.
+
+### Changed
+- Canonical enforcement pipeline definition is now explicitly:
+
+  1. run-structure  
+  2. structure-contract-version-gate  
+  3. independence  
+  4. integrity  
+  5. integrity-finalization  
+  6. publication  
+  7. publication-commit  
+
+- Documentation now accurately reflects the deterministic runtime behavior of the CRI-CORE kernel.
+
+### Compatibility
+- No changes to the runtime enforcement pipeline implementation.
+- No changes to enforcement semantics.
+- Fully backwards compatible with v0.7.0 artifacts and contract behavior.
+
+---
+
 ## [0.7.0] - 2026-03-10
 
 ### Added
