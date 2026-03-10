@@ -1,8 +1,61 @@
+---
+title: "CRI-CORE Changelog"
+filetype: "documentation"
+type: "log"
+domain: "enforcement"
+version: "0.7.0"
+doi: "TBD-0.7.0"
+status: "Active"
+created: "2026-02-19"
+updated: "2026-03-10"
+
+author:
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
+  orcid: "https://orcid.org/0009-0006-6043-9295"
+
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+
+license: "Apache-2.0"
+
+copyright:
+  holder: "Waveframe Labs"
+  year: "2026"
+
+ai_assisted: "partial"
+
+anchors:
+  - "CRI-CORE-CHANGELOG-v0.7.0"
+---
+
 # Changelog
 
 All notable changes to CRI-CORE are documented here.
 
 This project follows semantic versioning (0.x pre-stable).
+
+---
+
+## [0.7.0] - 2026-03-10
+
+### Added
+- Canonical proposal object schema (`schema/proposal.schema.json`)
+- Proposal validation fixtures (`tests/fixtures/proposals`)
+- Proposal schema validation test suite
+- Compiled contract interface specification (`docs/compiled_contract_interface.md`)
+- Compiled contract artifact schema (`schema/contract.schema.json`)
+- Contract validation fixtures (`tests/fixtures/contracts`)
+- Contract schema validation test suite
+
+### Changed
+- Hardening of runtime interface around proposal → enforcement → commit decision
+- Kernel input surfaces now explicitly structured around proposal objects and run artifacts
+
+### Notes
+- These changes introduce deterministic input validation for governance proposals and compiled contract artifacts.
+- The contract artifact schema is intended for use by external contract compiler tooling and is not interpreted directly by the CRI-CORE enforcement runtime.
 
 ---
 
