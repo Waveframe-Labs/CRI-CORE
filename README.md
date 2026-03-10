@@ -3,7 +3,7 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.7.0"
+version: "0.7.1"
 doi: "TBD"
 status: "Active"
 created: "2026-02-19"
@@ -29,13 +29,13 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.7.0"
+  - "CRI-CORE v0.7.1"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.7.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.7.1 --- Deterministic Enforcement Kernel**
 
 CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
 
@@ -246,7 +246,7 @@ It is domain-agnostic.
 
 ## Status
 
-v0.7.0 introduces explicit proposal and contract interface schemas, completing the runtime input hardening phase.
+v0.7.1 introduces explicit proposal and contract interface schemas, completing the runtime input hardening phase.
 
 CRI-CORE now operates as a deterministic governed mutation runtime with explicit structural input contracts.
 
