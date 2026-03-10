@@ -3,11 +3,11 @@ title: "CRI-CORE Compiled Contract Interface"
 filetype: "documentation"
 type: "guidance"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.1.1"
+doi: "TBD-0.1.1"
 status: "Active"
-created: "2026-03-09"
-updated: "2026-03-09"
+created: "2026-03-10"
+updated: "2026-03-10"
 
 author:
   name: "Shawn C. Wright"
@@ -30,45 +30,51 @@ dependencies:
   - "../schema/contract.schema.json"
 
 anchors:
-  - "CRI-CORE-COMPILED-CONTRACT-INTERFACE-v0.1.0"
+  - "CRI-CORE-COMPILED-CONTRACT-INTERFACE-v0.1.1"
 ---
 
 # CRI-CORE Compiled Contract Interface
 
 ## Purpose
 
-The compiled contract interface defines the deterministic artifact format consumed by the CRI-CORE kernel during enforcement.
+The compiled contract interface defines a **deterministic artifact format used by governance systems external to CRI-CORE**.
 
-CRI-CORE does **not interpret governance policy directly**. Instead, external systems are responsible for compiling governance definitions into a structured contract artifact. The kernel then evaluates mutation proposals against that compiled artifact.
+CRI-CORE does **not interpret governance policy directly**. Instead, external systems may compile governance definitions into structured contract artifacts. These artifacts may then be used by external tooling or future integration layers to construct mutation proposals and enforcement inputs.
 
 This separation ensures that:
 
 - governance policy remains external to the kernel
 - policy interpretation is deterministic
-- enforcement behavior is reproducible
 - contracts can be versioned and audited independently
+- the kernel remains small and domain-agnostic
 
 ---
 
 ## Architectural Role
 
-The compiled contract artifact sits between external governance systems and the CRI-CORE enforcement runtime.
+Compiled contracts belong to the **external governance layer**, not the CRI-CORE runtime itself.
 
 Conceptually:
 
-```text
-governance policy
-      ↓
-contract compiler
-      ↓
-compiled contract artifact
-      ↓
-CRI-CORE contract loader
-      ↓
-enforcement pipeline
-````
+```
 
-CRI-CORE therefore consumes **compiled contracts**, not policy definitions.
+governance policy
+↓
+contract compiler
+↓
+compiled contract artifact
+↓
+external workflow / adapter
+↓
+proposal object
+↓
+CRI-CORE enforcement runtime
+
+```
+
+CRI-CORE therefore consumes **mutation proposals**, not policy definitions.
+
+Compiled contracts may influence how proposals are constructed, but the kernel does not directly interpret governance policy artifacts.
 
 ---
 
@@ -78,53 +84,64 @@ The compiled contract interface is designed around several constraints.
 
 ### Determinism
 
-Contracts must produce identical enforcement behavior across environments. Contract artifacts must therefore contain all structural information required for enforcement.
+Contracts must produce identical governance behavior across environments. Contract artifacts must therefore contain all structural information required for governance interpretation.
 
 ### Kernel Independence
 
-The kernel must not interpret policy logic dynamically. All policy meaning must already be resolved in the compiled contract artifact.
+CRI-CORE must remain independent from governance policy logic. The kernel enforces structural invariants only.
 
 ### Versioned Governance
 
 Contracts must carry explicit identifiers and versions so historical runs can be replayed under the correct governance rules.
 
-### Minimal Surface Area
+### Minimal Kernel Surface
 
-The compiled contract artifact should contain only the fields required for structural enforcement. It should not contain arbitrary workflow state.
-
----
-
-## Contract Artifact Role in Enforcement
-
-Within CRI-CORE the contract artifact participates primarily in the **contract version gate** stage.
-
-The contract artifact provides the enforcement pipeline with the structural rules necessary to determine whether a proposed mutation is admissible.
-
-The artifact may influence stages such as:
-
-* authority independence checks
-* artifact integrity expectations
-* stage transition requirements
-* publication conditions
-
-However, the kernel itself does not infer these rules. It simply executes enforcement logic based on the compiled artifact.
+The kernel should not load or interpret arbitrary governance configuration artifacts. Governance compilation occurs outside the runtime boundary.
 
 ---
 
-## Canonical Contract Structure
+## Relationship to CRI-CORE Enforcement
 
-The compiled contract artifact is expected to contain the following top-level sections.
+Within CRI-CORE, the **only contract artifact consumed directly** is the run declaration file:
 
-```text
+```
+
+contract.json
+
+```
+
+This artifact provides:
+
+- `contract_version`
+- run-level metadata
+
+The kernel uses this information primarily for:
+
+- **contract version gating**
+- integrity and sealing rules tied to version thresholds
+
+All other governance interpretation occurs outside the kernel.
+
+---
+
+## Canonical Contract Structure (External)
+
+Compiled contracts may contain sections such as:
+
+```
+
 contract_id
 contract_version
 authority_requirements
 artifact_requirements
 stage_requirements
 invariants
+
 ```
 
-These sections allow the enforcement pipeline to evaluate a mutation proposal deterministically.
+These sections define governance constraints used by external systems that generate mutation proposals.
+
+The CRI-CORE runtime does not directly interpret these fields in v0.x.
 
 ---
 
@@ -134,12 +151,12 @@ These sections allow the enforcement pipeline to evaluate a mutation proposal de
 
 A unique identifier for the governance contract.
 
-This identifier distinguishes contracts that may define different enforcement behavior across domains or workflows.
-
 Example intent:
 
 ```
+
 finance-raci-policy
+
 ```
 
 ---
@@ -148,76 +165,73 @@ finance-raci-policy
 
 A semantic version identifier for the compiled contract artifact.
 
-The kernel uses this value to ensure that mutation proposals reference a compatible contract version.
+This version may influence structural enforcement rules applied by the kernel.
 
-Example intent:
+Example:
 
 ```
+
 0.3.0
-```
+
+````
 
 ---
 
 ### `authority_requirements`
 
-Defines structural authority expectations for mutation approval.
+Defines structural authority expectations such as:
 
-This section allows the enforcement pipeline to verify independence conditions such as:
+- proposer identity
+- reviewer identities
+- role separation expectations
 
-* proposer identity
-* reviewer identity
-* required authority roles
-* separation-of-duties conditions
-
-The kernel evaluates these constraints structurally rather than semantically.
+These constraints are typically enforced by external workflow systems that construct mutation proposals.
 
 ---
 
 ### `artifact_requirements`
 
-Defines the artifact structure required for mutation proposals governed by this contract.
+Defines artifact expectations for proposals governed by this contract.
 
-This section may include:
+Examples may include:
 
-* required artifact presence
-* artifact binding expectations
-* integrity verification rules
+- required proposal artifacts
+- approval artifacts
+- integrity bindings
 
-These constraints ensure that mutation proposals provide the artifacts necessary for deterministic replay and validation.
+These rules are resolved before proposals reach the CRI-CORE runtime.
 
 ---
 
 ### `stage_requirements`
 
-Defines stage-level constraints relevant to the enforcement pipeline.
+Defines stage-level governance constraints used by external systems.
 
-These constraints may specify conditions such as:
+Examples may include:
 
-* allowed stage transitions
-* stage-level artifact requirements
-* stage-specific authority checks
+- allowed transitions
+- workflow state expectations
+- stage-specific review requirements
 
-The kernel does not interpret workflow semantics. It only validates structural compliance with the compiled contract artifact.
+These constraints are not interpreted directly by CRI-CORE.
 
 ---
 
 ### `invariants`
 
-Defines structural invariants that must hold for a proposal governed by this contract.
+Defines structural invariants required by governance policy.
 
-Invariants may represent conditions such as:
+Examples may include:
 
-* immutable artifact bindings
-* identity independence rules
-* deterministic publication expectations
+- separation of duties
+- artifact immutability expectations
+- publication requirements
 
-The kernel evaluates these invariants as part of the enforcement pipeline.
+External systems may enforce these constraints before invoking CRI-CORE.
 
 ---
 
 ## Example Contract Artifact (Conceptual)
-
-The following simplified example illustrates the conceptual shape of a compiled contract artifact.
 
 ```yaml
 contract_id: finance-raci-policy
@@ -241,29 +255,28 @@ stage_requirements:
 
 invariants:
   separation_of_duties: true
-```
+````
 
-This example illustrates structure only. Actual contract artifacts may contain additional compiled information necessary for enforcement.
+This example illustrates conceptual governance structure.
+CRI-CORE does not directly interpret these fields.
 
 ---
 
 ## Relationship to the Canonical Proposal Object
 
-The compiled contract artifact complements the canonical proposal object.
+The proposal object defines the **mutation request envelope** evaluated by CRI-CORE.
 
-```text
+Compiled contracts influence how proposals are constructed but are not themselves the enforcement input.
+
+```
+governance contract
+      ↓
+proposal construction
+      ↓
 proposal object
       ↓
-contract artifact
-      ↓
-enforcement pipeline
+CRI-CORE enforcement runtime
 ```
-
-The proposal describes **what mutation is being requested**.
-
-The contract artifact describes **how that mutation must be evaluated**.
-
-Together these artifacts provide the enforcement runtime with the information necessary to make a deterministic commit decision.
 
 ---
 
@@ -271,34 +284,28 @@ Together these artifacts provide the enforcement runtime with the information ne
 
 CRI-CORE is responsible for:
 
-* loading compiled contract artifacts
-* validating contract structure
-* exposing contract data to enforcement stages
-* ensuring contract versions match proposal expectations
+* validating proposal structure
+* enforcing structural independence
+* verifying cryptographic integrity
+* validating publication constraints
+* producing a deterministic commit decision
 
-CRI-CORE is **not responsible for compiling governance policy**.
-
-That responsibility belongs to external systems.
+CRI-CORE is **not responsible for interpreting governance policy artifacts**.
 
 ---
 
 ## Scope of v0.1
 
-Version 0.1.0 defines the minimal interface necessary for deterministic contract consumption by the kernel.
+Version 0.1.1 defines a conceptual interface for governance contract artifacts used by external systems.
 
-Future versions may expand:
+Future integration layers may expand the relationship between compiled contracts and the CRI-CORE runtime.
 
-* authority modeling
-* artifact binding rules
-* enforcement stage configuration
-* escalation pathways
-
-Any expansion must occur through explicit versioned evolution to preserve reproducibility.
+Such expansions must occur through explicit versioned evolution to preserve reproducibility.
 
 ---
 
 ## Summary
 
-The compiled contract interface defines the deterministic artifact boundary between governance policy systems and the CRI-CORE enforcement runtime.
+The compiled contract interface defines a governance artifact boundary external to the CRI-CORE runtime.
 
-By separating policy compilation from kernel enforcement, CRI-CORE maintains a small, auditable, domain-agnostic runtime capable of evaluating governed mutation proposals across diverse workflows.
+By keeping governance compilation outside the kernel, CRI-CORE remains a small, deterministic, domain-agnostic enforcement engine focused solely on structural admissibility and commit authorization.
