@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.6.0"
+version: "0.7.0"
 doi: "TBD"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-02"
+updated: "2026-03-10"
 
 author:
   name: "Shawn C. Wright"
@@ -29,25 +29,23 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.6.0"
+  - "CRI-CORE v0.7.0"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.6.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.7.0 --- Deterministic Enforcement Kernel**
 
-CRI-CORE is a deterministic structural enforcement engine for governed
-state transitions.
+CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
 
-It evaluates a run directory against explicit structural, authority,
-integrity, binding, sealing, and publication constraints and returns a
-single authoritative mutation decision.
+It evaluates a run directory against explicit structural, authority, integrity, binding, seal, and publication constraints.
 
-The kernel does not interpret meaning.\
+The kernel does not interpret meaning.
+
 It evaluates structure and invariants only.
 
-------------------------------------------------------------------------
+---
 
 ## Installation
 
@@ -57,7 +55,7 @@ Install from PyPI:
 
 Requires Python 3.10+.
 
-------------------------------------------------------------------------
+---
 
 ## Minimal Usage
 
@@ -80,7 +78,22 @@ The function returns:
 
 `commit_allowed` is the sole commit authorization signal.
 
-------------------------------------------------------------------------
+---
+
+## Runtime Input Contracts
+
+CRI-CORE evaluates deterministic run artifacts and explicit mutationrequests.
+
+The kernel relies on two structured input contracts:
+
+- Run artifact contract (run directory structure)
+- Mutation proposal object (canonical proposal envelope)
+
+Proposal objects are validated against the canonical proposal schema before enforcement.
+
+Compiled governance contracts may be used by external systems to construct proposal objects, but CRI-CORE does not interpret governance policy directly.
+
+---
 
 ## Core Model
 
@@ -93,39 +106,45 @@ The function returns:
 The kernel ensures that only structurally valid and cryptographically
 sealed runs are permitted to mutate governed state.
 
-------------------------------------------------------------------------
+---
 
-## Enforcement Pipeline (v0.6.0)
+## Enforcement Pipeline (v0.7.0)
 
 Canonical stage order:
 
-1.  run-structure\
-2.  structure-contract-version-gate\
-3.  independence\
-4.  integrity (verification)\
-5.  integrity-finalization\
-6.  publication\
-7.  publication-commit
+1. run-structure
+2. structure-contract-version-gate
+3. independence
+4. integrity
+5. integrity-finalization
+6. publication
+7. publication-commit
 
 The pipeline is deterministic and ordered.
 
-------------------------------------------------------------------------
+---
 
 ## Contract-Version Behavior
 
 CRI-CORE enforces versioned structural guarantees:
 
-For `contract_version < 0.3.0`: - Structural validation - Independence
-enforcement - Integrity manifest verification
+For `contract_version < 0.3.0`:
 
-For `contract_version ≥ 0.3.0`: - binding.json required - SEAL.json
-required - Strict cryptographic seal validation - Immutable artifact
-boundary enforcement
+- Structural validation - Independence
+enforcement 
+- Integrity manifest verification
+
+For `contract_version ≥ 0.3.0`: 
+
+- binding.json required 
+- SEAL.json required 
+- Strict cryptographic seal validation 
+- Immutable artifact boundary enforcement
 
 Enforcement meaning is isolated per declared contract version.\
 Historical runs are validated under their declared version.
 
-------------------------------------------------------------------------
+---
 
 ## Independence Model
 
@@ -139,7 +158,7 @@ The kernel enforces structural role separation:
 The kernel evaluates identity structure only.\
 It does not evaluate competence or review quality.
 
-------------------------------------------------------------------------
+---
 
 ## Cryptographic Guarantees
 
@@ -162,7 +181,7 @@ Any mutation changes the seal hash.
 The seal provides tamper evidence.\
 It is not a signature.
 
-------------------------------------------------------------------------
+---
 
 ## Atomic Commit Semantics
 
@@ -177,7 +196,7 @@ The caller decides whether to mutate.
 The kernel centralizes the commit decision.\
 It does not enforce it outside its invocation boundary.
 
-------------------------------------------------------------------------
+---
 
 ## What CRI-CORE Does Not Do
 
@@ -192,7 +211,7 @@ CRI-CORE does not:
 
 It is a deterministic structural gate only.
 
-------------------------------------------------------------------------
+---
 
 ## Design Principles
 
@@ -204,7 +223,7 @@ It is a deterministic structural gate only.
 -   Versioned enforcement meaning
 -   Strict immutability after finalization
 
-------------------------------------------------------------------------
+---
 
 ## Intended Use
 
@@ -223,11 +242,13 @@ It provides:
 
 It is domain-agnostic.
 
-------------------------------------------------------------------------
+---
 
 ## Status
 
-v0.6.0 represents the first public PyPI distribution of CRI-CORE.
+v0.7.0 introduces explicit proposal and contract interface schemas, completing the runtime input hardening phase.
+
+CRI-CORE now operates as a deterministic governed mutation runtime with explicit structural input contracts.
 
 The enforcement interface is stable within the 0.x series but may evolve
 prior to 1.0.
