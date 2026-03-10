@@ -26,6 +26,7 @@
     "authority_requirements": {
       "type": "object",
       "description": "Structural authority expectations for mutation approval.",
+      "minProperties": 1,
       "properties": {
 
         "proposer_role": {
@@ -52,6 +53,7 @@
     "artifact_requirements": {
       "type": "object",
       "description": "Artifact binding requirements for mutation proposals.",
+      "minProperties": 1,
       "properties": {
 
         "required_artifacts": {
@@ -70,10 +72,12 @@
     "stage_requirements": {
       "type": "object",
       "description": "Structural stage constraints enforced by the kernel.",
+      "minProperties": 1,
       "properties": {
 
         "allowed_transitions": {
           "type": "array",
+          "minItems": 1,
           "items": {
             "type": "object",
             "required": ["from", "to"],
@@ -99,6 +103,7 @@
     "invariants": {
       "type": "object",
       "description": "Structural invariants required by the contract.",
+      "minProperties": 1,
       "properties": {
 
         "separation_of_duties": {
