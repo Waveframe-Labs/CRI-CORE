@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.7.0"
-doi: "TBD-0.7.0"
+version: "0.8.0"
+doi: "TBD-0.8.0"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-10"
+updated: "2026-03-11"
 
 author:
   name: "Shawn C. Wright"
@@ -27,7 +27,7 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.7.0"
+  - "CRI-CORE-CHANGELOG-v0.8.0"
 ---
 
 # Changelog
@@ -35,7 +35,42 @@ anchors:
 All notable changes to CRI-CORE are documented here.
 
 This project follows semantic versioning (0.x pre-stable).
+---
 
+## [0.8.0] – 2026-03-11
+
+### Added
+- Deterministic compiled contract binding via `structure-contract-hash-gate`.
+- Proposal contract hash requirement (`contract.hash`) in the canonical proposal schema.
+- `contract_hash` field in compiled contract schema.
+- Enforcement stage verifying proposal → compiled contract integrity binding.
+
+### Changed
+- Canonical enforcement pipeline now includes the contract hash gate:
+
+  1. run-structure  
+  2. structure-contract-version-gate  
+  3. structure-contract-hash-gate  
+  4. independence  
+  5. integrity  
+  6. integrity-finalization  
+  7. publication  
+  8. publication-commit  
+
+- Stage registry (`stage_ids.py`) updated to include `structure-contract-hash-gate`.
+- Pipeline execution test updated to reflect the 8-stage pipeline.
+- Contract and proposal fixtures updated to include required hash fields.
+
+### Security
+- Proposals are now cryptographically bound to the compiled governance contract used by the run.
+- Prevents contract substitution and governance drift between proposal submission and enforcement evaluation.
+
+### Compatibility
+- Breaking change for proposal and contract schemas:
+  - Proposals must now include `contract.hash`.
+  - Compiled contracts must include `contract_hash`.
+- Existing fixtures and schemas have been updated accordingly.
+- 
 ---
 
 ## [0.7.1] – 2026-03-10
