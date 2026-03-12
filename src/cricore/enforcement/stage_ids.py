@@ -4,11 +4,11 @@ title: "CRI-CORE Canonical Stage Identifiers"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.1"
-doi: "TBD-0.1.1"
+version: "0.1.2"
+doi: "TBD-0.1.2"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-09"
+updated: "2026-03-11"
 
 author:
   name: "Shawn C. Wright"
@@ -28,13 +28,14 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-StageIDs-v0.1.1"
+  - "CRI-CORE-StageIDs-v0.1.2"
 ---
 """
 
 class StageID:
     RUN_STRUCTURE = "run-structure"
     VERSION_GATE = "structure-contract-version-gate"
+    CONTRACT_HASH_GATE = "structure-contract-hash-gate"
     INDEPENDENCE = "independence"
     INTEGRITY = "integrity"
     INTEGRITY_FINALIZATION = "integrity-finalization"
@@ -45,6 +46,7 @@ class StageID:
 CANONICAL_STAGE_ORDER = [
     StageID.RUN_STRUCTURE,
     StageID.VERSION_GATE,
+    StageID.CONTRACT_HASH_GATE,
     StageID.INDEPENDENCE,
     StageID.INTEGRITY,
     StageID.INTEGRITY_FINALIZATION,
