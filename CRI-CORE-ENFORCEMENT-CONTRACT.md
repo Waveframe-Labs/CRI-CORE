@@ -3,10 +3,10 @@ title: "CRI-CORE Enforcement Contract"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.5.1"
+version: "0.6.0"
 status: "Active"
 created: "2026-02-27"
-updated: "2026-03-09"
+updated: "2026-03-11"
 license: "Apache-2.0"
 
 author:
@@ -21,10 +21,10 @@ maintainer:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.5.1"
+  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.6.0"
 ---
 
-# CRI-CORE Enforcement Contract (v0.5.1)
+# CRI-CORE Enforcement Contract (v0.6.0)
 
 ## 1. Scope
 
@@ -53,11 +53,12 @@ The pipeline executes in the following normative order:
 
 1. run-structure
 2. structure-contract-version-gate
-3. independence
-4. integrity
-5. integrity-finalization
-6. publication
-7. publication-commit
+3. structure-contract-hash-gate
+4. independence
+5. integrity
+6. integrity-finalization
+7. publication
+8. publication-commit
 
 The canonical stages are emitted in deterministic order.
 
@@ -65,9 +66,36 @@ The canonical stages are emitted in deterministic order.
 
 ---
 
-## 3. Run Artifact Contract
+## 3. Contract Binding Enforcement
 
-### 3.1 Required Before Finalization
+CRI-CORE enforces deterministic binding between mutation proposals and the compiled governance contract used during evaluation.
+
+A proposal MUST reference the governing contract using:
+
+```
+contract.id
+contract.version
+contract.hash
+```
+
+During enforcement the kernel verifies that:
+
+```
+proposal.contract.hash == compiled_contract.contract_hash
+```
+
+If the hashes differ, enforcement fails and the run is rejected.
+
+This mechanism ensures that mutation proposals are cryptographically bound to the exact compiled governance contract used by the enforcement runtime.
+
+The kernel does not interpret governance policy structure directly.
+It verifies the identity of the compiled contract artifact used during evaluation.
+
+---
+
+## 4. Run Artifact Contract
+
+### 4.1 Required Before Finalization
 
 A valid run directory MUST contain:
 
@@ -77,7 +105,7 @@ A valid run directory MUST contain:
 - `approval.json`
 - `validation/` (machine validation outputs)
 
-### 3.2 Required After Finalization
+### 4.2 Required After Finalization
 
 Finalization MUST produce:
 
@@ -91,7 +119,7 @@ If `contract_version >= 0.3.0`, finalization MUST also produce:
 
 ---
 
-## 4. Independence Enforcement
+## 5. Independence Enforcement
 
 If `required_roles` is declared:
 
@@ -106,9 +134,9 @@ Independence enforcement is structural only.
 
 ---
 
-## 5. Integrity Enforcement
+## 6. Integrity Enforcement
 
-### 5.1 Integrity Stage (Non-Mutating)
+### 6.1 Integrity Stage (Non-Mutating)
 
 The integrity stage:
 
@@ -116,7 +144,7 @@ The integrity stage:
 - Verifies `SHA256SUMS.txt` when present.
 - Performs no writes.
 
-### 5.2 Integrity-Finalization Stage (Mutating)
+### 6.2 Integrity-Finalization Stage (Mutating)
 
 Finalization writes:
 
@@ -129,7 +157,7 @@ Finalization MUST NOT execute if prior stages failed.
 
 ---
 
-## 6. Binding Invariant (>= 0.3.0)
+## 7. Binding Invariant (>= 0.3.0)
 
 `binding.json` MUST:
 
@@ -142,7 +170,7 @@ Binding is structural and cryptographic only.
 
 ---
 
-## 7. Seal Invariant (>= 0.3.0)
+## 8. Seal Invariant (>= 0.3.0)
 
 `SEAL.json` MUST:
 
@@ -155,7 +183,7 @@ The seal provides tamper-evidence for the full run surface.
 
 ---
 
-## 8. Failure Semantics
+## 9. Failure Semantics
 
 Enforcement fails if:
 
@@ -170,7 +198,7 @@ Failure blocks `publication-commit`.
 
 ---
 
-## 9. Versioning
+## 10. Versioning
 
 This contract follows semantic versioning:
 
@@ -181,3 +209,9 @@ This contract follows semantic versioning:
 Historical runs MUST be interpreted under their declared `contract_version`.
 
 Silent enforcement changes are prohibited.
+
+---
+
+<div align="center">
+  <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
+</div>
