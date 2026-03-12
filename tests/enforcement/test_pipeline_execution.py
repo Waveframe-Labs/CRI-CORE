@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Execution Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.3.2"
-doi: "TBD-0.3.2"
+version: "0.3.3"
+doi: "TBD-0.3.3"
 status: "Active"
 created: "2026-02-11"
-updated: "2026-03-09"
+updated: "2026-03-11"
 
 author:
   name: "Shawn C. Wright"
@@ -32,7 +32,7 @@ dependencies:
   - "../../src/cricore/results/stage.py"
 
 anchors:
-  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.3.2"
+  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.3.3"
 ---
 """
 
@@ -77,11 +77,12 @@ def test_enforcement_pipeline_executes_all_stages_in_order(tmp_path: Path):
         run_context=run_context,
     )
 
-    assert len(results) == 7
+    assert len(results) == 8
 
     assert [r.stage_id for r in results] == [
         "run-structure",
         "structure-contract-version-gate",
+        "structure-contract-hash-gate",
         "independence",
         "integrity",
         "integrity-finalization",
@@ -91,4 +92,3 @@ def test_enforcement_pipeline_executes_all_stages_in_order(tmp_path: Path):
 
     # commit_allowed should match publication-commit stage
     assert commit_allowed == results[-1].passed
-    
