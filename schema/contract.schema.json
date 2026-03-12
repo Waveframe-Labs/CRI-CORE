@@ -7,7 +7,8 @@
 
   "required": [
     "contract_id",
-    "contract_version"
+    "contract_version",
+    "contract_hash"
   ],
 
   "properties": {
@@ -21,6 +22,12 @@
       "type": "string",
       "description": "Semantic version of the compiled contract artifact.",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+
+    "contract_hash": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$",
+      "description": "Deterministic SHA-256 hash of the compiled contract artifact."
     },
 
     "authority_requirements": {
