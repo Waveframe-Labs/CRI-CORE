@@ -10,7 +10,8 @@
 
   "contract": {
     "id": "claim-lifecycle-policy",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000"
   },
 
   "requested_mutation": {
