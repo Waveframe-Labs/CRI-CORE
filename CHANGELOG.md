@@ -41,12 +41,13 @@ This project follows semantic versioning (0.x pre-stable).
 
 ### Added
 - Deterministic compiled contract binding via `structure-contract-hash-gate`.
-- Proposal contract hash requirement (`contract.hash`) in the canonical proposal schema.
 - `contract_hash` field in compiled contract schema.
-- Enforcement stage verifying proposal → compiled contract integrity binding.
+- `contract.hash` field in canonical proposal schema.
+- Kernel stage verifying proposal → compiled contract identity.
+- Kernel invariants specification (`docs/KERNEL_INVARIANTS.md`).
 
 ### Changed
-- Canonical enforcement pipeline now includes the contract hash gate:
+- Canonical enforcement pipeline expanded to 8 stages:
 
   1. run-structure  
   2. structure-contract-version-gate  
@@ -57,20 +58,25 @@ This project follows semantic versioning (0.x pre-stable).
   7. publication  
   8. publication-commit  
 
-- Stage registry (`stage_ids.py`) updated to include `structure-contract-hash-gate`.
-- Pipeline execution test updated to reflect the 8-stage pipeline.
-- Contract and proposal fixtures updated to include required hash fields.
+- Stage registry updated (`stage_ids.py`) to include the contract hash gate.
+- Pipeline execution tests updated for the new stage.
+- Proposal and contract fixtures updated to include required hash fields.
+- Documentation aligned with runtime architecture:
+  - enforcement contract specification updated
+  - compiled contract interface updated
+  - canonical stage order updated
 
 ### Security
-- Proposals are now cryptographically bound to the compiled governance contract used by the run.
-- Prevents contract substitution and governance drift between proposal submission and enforcement evaluation.
+- Proposals are now cryptographically bound to the compiled governance contract used during enforcement.
+- Prevents governance substitution or contract drift between proposal creation and runtime enforcement.
 
 ### Compatibility
-- Breaking change for proposal and contract schemas:
-  - Proposals must now include `contract.hash`.
-  - Compiled contracts must include `contract_hash`.
-- Existing fixtures and schemas have been updated accordingly.
-- 
+- Breaking schema change:
+  - proposals must include `contract.hash`
+  - compiled contracts must include `contract_hash`
+
+- Existing test fixtures updated accordingly.
+
 ---
 
 ## [0.7.1] – 2026-03-10
