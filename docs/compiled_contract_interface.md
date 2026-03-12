@@ -3,11 +3,11 @@ title: "CRI-CORE Compiled Contract Interface"
 filetype: "documentation"
 type: "guidance"
 domain: "enforcement"
-version: "0.1.1"
-doi: "TBD-0.1.1"
+version: "0.1.2"
+doi: "TBD-0.1.2"
 status: "Active"
 created: "2026-03-10"
-updated: "2026-03-10"
+updated: "2026-03-11"
 
 author:
   name: "Shawn C. Wright"
@@ -30,7 +30,7 @@ dependencies:
   - "../schema/contract.schema.json"
 
 anchors:
-  - "CRI-CORE-COMPILED-CONTRACT-INTERFACE-v0.1.1"
+  - "CRI-CORE-COMPILED-CONTRACT-INTERFACE-v0.1.2"
 ---
 
 # CRI-CORE Compiled Contract Interface
@@ -132,6 +132,7 @@ Compiled contracts may contain sections such as:
 
 contract_id
 contract_version
+contract_hash
 authority_requirements
 artifact_requirements
 stage_requirements
@@ -154,9 +155,7 @@ A unique identifier for the governance contract.
 Example intent:
 
 ```
-
 finance-raci-policy
-
 ```
 
 ---
@@ -170,10 +169,8 @@ This version may influence structural enforcement rules applied by the kernel.
 Example:
 
 ```
-
 0.3.0
-
-````
+```
 
 ---
 
@@ -186,6 +183,32 @@ Defines structural authority expectations such as:
 - role separation expectations
 
 These constraints are typically enforced by external workflow systems that construct mutation proposals.
+
+---
+
+### `contract_hash`
+
+A deterministic SHA-256 digest representing the compiled contract artifact.
+
+This hash is produced by the contract compiler and serves as the identity of the compiled contract used during enforcement.
+
+Mutation proposals must reference the compiled contract via:
+
+```
+contract.id
+contract.version
+contract.hash
+```
+
+During ennforcement, CRI-CORE verifies that:
+
+```
+proposal.contract.hash == compiled_contract.contract_hash
+```
+
+If the values differ, enforcement fails.
+
+This mechanism ensures that proposals are cryptographically bound to the exact compiled governance contract used during evaluation.
 
 ---
 
@@ -236,6 +259,7 @@ External systems may enforce these constraints before invoking CRI-CORE.
 ```yaml
 contract_id: finance-raci-policy
 contract_version: 0.3.0
+contract_hash: "3d2b6c9c8a7f4e1b4d2e8c8a9a2d4b5c3e6f7a9b1c2d3e4f5a6b7c8d9e0f1a2b"
 
 authority_requirements:
   proposer_role: proposer
@@ -255,10 +279,10 @@ stage_requirements:
 
 invariants:
   separation_of_duties: true
-````
+```
 
 This example illustrates conceptual governance structure.
-CRI-CORE does not directly interpret these fields.
+CRI-CORE does not interpret governance policy structure directly. However, the kernel verifies deterministic contract binding by validating the compiled contract hash referenced by the proposal.
 
 ---
 
