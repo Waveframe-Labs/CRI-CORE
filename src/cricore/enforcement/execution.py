@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Orchestrator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.1"
-doi: "TBD-0.4.1"
+version: "0.4.2"
+doi: "TBD-0.4.2"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-19"
+updated: "2026-03-11"
 
 author:
   name: "Shawn C. Wright"
@@ -26,7 +26,6 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted refactor to make commit semantics explicit via commit_allowed return value."
 
 dependencies:
   - "../run/structure.py"
@@ -36,12 +35,14 @@ dependencies:
   - "../results/stage.py"
 
 anchors:
-  - "CRI-CORE-EnforcementPipeline-v0.4.1"
+  - "CRI-CORE-EnforcementPipeline-v0.4.2"
 ---
 """
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple
 
 from ..results.stage import StageResult
@@ -56,6 +57,7 @@ def _make_version_gate_stage(
     expected_contract_version: Optional[str],
     structure_stage: StageResult,
 ) -> StageResult:
+
     if expected_contract_version is None:
         return StageResult(
             stage_id="structure-contract-version-gate",
@@ -86,20 +88,67 @@ def _make_version_gate_stage(
     )
 
 
+def _make_contract_hash_gate_stage(run_path: str, *, version_gate_stage: StageResult) -> StageResult:
+
+    proposal_path = Path(run_path) / "proposal.json"
+    contract_path = Path(run_path) / "contract.json"
+
+    if not version_gate_stage.passed:
+        return StageResult(
+            stage_id="structure-contract-hash-gate",
+            passed=False,
+            failure_classes=["blocked"],
+            messages=["blocked: version gate failed"],
+            checked_at_utc=version_gate_stage.checked_at_utc,
+            engine_version=None,
+        )
+
+    try:
+        with proposal_path.open() as f:
+            proposal = json.load(f)
+
+        with contract_path.open() as f:
+            contract = json.load(f)
+
+        proposal_hash = proposal["contract"]["hash"]
+        contract_hash = contract["contract_hash"]
+
+        if proposal_hash != contract_hash:
+            return StageResult(
+                stage_id="structure-contract-hash-gate",
+                passed=False,
+                failure_classes=["contract-hash-mismatch"],
+                messages=["proposal contract hash does not match compiled contract artifact"],
+                checked_at_utc=version_gate_stage.checked_at_utc,
+                engine_version=None,
+            )
+
+        return StageResult(
+            stage_id="structure-contract-hash-gate",
+            passed=True,
+            failure_classes=[],
+            messages=[],
+            checked_at_utc=version_gate_stage.checked_at_utc,
+            engine_version=None,
+        )
+
+    except Exception as exc:
+        return StageResult(
+            stage_id="structure-contract-hash-gate",
+            passed=False,
+            failure_classes=["contract-hash-validation-error"],
+            messages=[str(exc)],
+            checked_at_utc=version_gate_stage.checked_at_utc,
+            engine_version=None,
+        )
+
+
 def run_enforcement_pipeline(
     run_path: str,
     *,
     expected_contract_version: Optional[str] = None,
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> Tuple[List[StageResult], bool]:
-    """
-    Execute the canonical CRI-CORE enforcement pipeline.
-
-    Returns:
-        (results, commit_allowed)
-
-    commit_allowed is TRUE if and only if the publication-commit stage passes.
-    """
 
     results: List[StageResult] = []
 
@@ -117,21 +166,28 @@ def run_enforcement_pipeline(
     )
     results.append(version_gate_res)
 
-    # 3) Independence
+    # 3) Contract hash gate
+    hash_gate_res = _make_contract_hash_gate_stage(
+        run_path,
+        version_gate_stage=version_gate_res,
+    )
+    results.append(hash_gate_res)
+
+    # 4) Independence
     independence_res = run_independence_stage(
         run_path,
         run_context=run_context,
     )
     results.append(independence_res)
 
-    # 4) Integrity
+    # 5) Integrity
     integrity_res = run_integrity_stage(
         run_path,
         run_context=run_context,
     )
     results.append(integrity_res)
 
-    # 5) Integrity finalization
+    # 6) Integrity finalization
     finalization_res = run_integrity_finalization_stage(
         run_path,
         run_context=run_context,
@@ -139,14 +195,14 @@ def run_enforcement_pipeline(
     )
     results.append(finalization_res)
 
-    # 6) Publication validation
+    # 7) Publication validation
     publication_res = run_publication_stage(
         run_path,
         run_context=run_context,
     )
     results.append(publication_res)
 
-    # 7) Publication commit
+    # 8) Publication commit
     commit_res = run_publication_commit_stage(
         run_path,
         prior_stage_results=results,
