@@ -1,6 +1,7 @@
 {
   "contract_id": "claim-lifecycle-policy",
   "contract_version": "0.1.0",
+  "contract_hash": "0000000000000000000000000000000000000000000000000000000000000000",
 
   "authority_requirements": {
     "proposer_role": "proposer",
