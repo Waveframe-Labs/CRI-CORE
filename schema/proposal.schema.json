@@ -48,20 +48,29 @@
     },
 
     "contract": {
-      "type": "object",
-      "required": ["id", "version"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Identifier for the governance contract."
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
-        }
-      },
-      "additionalProperties": false
+  "type": "object",
+  "required": ["id", "version", "hash"],
+  "properties": {
+
+    "id": {
+      "type": "string",
+      "description": "Identifier for the governance contract."
     },
+
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$",
+      "description": "SHA-256 hash of the compiled contract artifact."
+    }
+
+  },
+  "additionalProperties": false
+},
 
     "requested_mutation": {
       "type": "object",
