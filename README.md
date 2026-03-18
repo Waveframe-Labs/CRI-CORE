@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.8.0"
+version: "0.9.0"
 doi: "TBD"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-12"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -29,7 +29,7 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.8.0"
+  - "CRI-CORE v0.9.0"
   - "Deterministic Enforcement Kernel"
 ---
 
@@ -119,7 +119,7 @@ sealed runs are permitted to mutate governed state.
 
 ---
 
-## Enforcement Pipeline (v0.8.0)
+## Enforcement Pipeline (v0.9.0)
 
 Canonical stage order:
 
@@ -254,19 +254,6 @@ It provides:
 -   Centralized commit authorization
 
 It is domain-agnostic.
-
----
-
-## Status
-
-v0.8.0 introduces deterministic contract identity binding between proposals and compiled governance contracts.
-
-This release expands the enforcement pipeline with a contract hash verification stage and introduces kernel invariants documentation.
-
-CRI-CORE now operates as a deterministic governed mutation runtime with explicit structural input contracts.
-
-The enforcement interface is stable within the 0.x series but may evolve
-prior to 1.0.
 
 ---
 

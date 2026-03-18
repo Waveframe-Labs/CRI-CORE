@@ -8,7 +8,7 @@ version: "0.4.2"
 doi: "TBD-0.4.2"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-03-11"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -88,10 +88,14 @@ def _make_version_gate_stage(
     )
 
 
-def _make_contract_hash_gate_stage(run_path: str, *, version_gate_stage: StageResult) -> StageResult:
+def _make_contract_hash_gate_stage(
+    run_path: str,
+    *,
+    version_gate_stage: StageResult,
+) -> StageResult:
 
     proposal_path = Path(run_path) / "proposal.json"
-    contract_path = Path(run_path) / "contract.json"
+    compiled_contract_path = Path(run_path) / "compiled_contract.json"
 
     if not version_gate_stage.passed:
         return StageResult(
@@ -107,11 +111,11 @@ def _make_contract_hash_gate_stage(run_path: str, *, version_gate_stage: StageRe
         with proposal_path.open() as f:
             proposal = json.load(f)
 
-        with contract_path.open() as f:
-            contract = json.load(f)
+        with compiled_contract_path.open() as f:
+            compiled_contract = json.load(f)
 
         proposal_hash = proposal["contract"]["hash"]
-        contract_hash = contract["contract_hash"]
+        contract_hash = compiled_contract["contract_hash"]
 
         if proposal_hash != contract_hash:
             return StageResult(
@@ -166,7 +170,7 @@ def run_enforcement_pipeline(
     )
     results.append(version_gate_res)
 
-    # 3) Contract hash gate
+    # 3) Contract hash gate (FIXED)
     hash_gate_res = _make_contract_hash_gate_stage(
         run_path,
         version_gate_stage=version_gate_res,

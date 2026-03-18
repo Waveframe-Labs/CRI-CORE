@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Execution Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.3.3"
-doi: "TBD-0.3.3"
+version: "0.4.0"
+doi: "TBD-0.4.0"
 status: "Active"
 created: "2026-02-11"
-updated: "2026-03-11"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -32,7 +32,7 @@ dependencies:
   - "../../src/cricore/results/stage.py"
 
 anchors:
-  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.3.3"
+  - "CRI-CORE-PIPELINE-EXECUTION-TEST-v0.4.0"
 ---
 """
 
@@ -77,6 +77,7 @@ def test_enforcement_pipeline_executes_all_stages_in_order(tmp_path: Path):
         run_context=run_context,
     )
 
+    # Updated: 8 stages including contract hash gate
     assert len(results) == 8
 
     assert [r.stage_id for r in results] == [

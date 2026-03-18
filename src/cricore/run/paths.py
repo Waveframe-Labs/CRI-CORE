@@ -4,11 +4,11 @@ title: "CRI-CORE Run Artifact Path Definitions"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-02-09"
-updated: "2026-02-09"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -26,24 +26,22 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted extraction of required run artifact surfaces from the CRI-CORE enforcement contract, under human review."
 
 dependencies:
   - "./structure.py"
 
 anchors:
-  - "CRI-CORE-RunPaths-v0.1.0"
+  - "CRI-CORE-RunPaths-v0.2.0"
 ---
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 
-# Required surfaces derived from CRI_CORE_ENFORCEMENT_CONTRACT.md §3.4–§3.10.
-REQUIRED_FILES: List[str] = [
+BASE_REQUIRED_FILES: List[str] = [
     "contract.json",
     "report.md",
     "randomness.json",
@@ -56,8 +54,19 @@ REQUIRED_DIRECTORIES: List[str] = [
 ]
 
 
-def required_file_paths(run_root: Path) -> List[Path]:
-    return [run_root / name for name in REQUIRED_FILES]
+def required_file_paths(
+    run_root: Path,
+    *,
+    contract_version: Optional[str] = None,
+) -> List[Path]:
+
+    files = list(BASE_REQUIRED_FILES)
+
+    # New requirement: compiled contract only for newer versions
+    if contract_version is not None and contract_version >= "0.2.0":
+        files.append("compiled_contract.json")
+
+    return [run_root / name for name in files]
 
 
 def required_directory_paths(run_root: Path) -> List[Path]:
