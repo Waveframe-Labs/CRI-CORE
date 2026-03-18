@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.7.0"
+version: "0.9.0"
 doi: "TBD"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-10"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -29,13 +29,13 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.7.0"
+  - "CRI-CORE v0.9.0"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.7.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.8.0 --- Deterministic Enforcement Kernel**
 
 CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
 
@@ -82,7 +82,7 @@ The function returns:
 
 ## Runtime Input Contracts
 
-CRI-CORE evaluates deterministic run artifacts and explicit mutationrequests.
+CRI-CORE evaluates deterministic run artifacts and explicit mutation requests.
 
 The kernel relies on two structured input contracts:
 
@@ -91,7 +91,18 @@ The kernel relies on two structured input contracts:
 
 Proposal objects are validated against the canonical proposal schema before enforcement.
 
-Compiled governance contracts may be used by external systems to construct proposal objects, but CRI-CORE does not interpret governance policy directly.
+Compiled governance contracts may be used by external systems to construct proposal objects.
+
+Proposals reference the governing contract using:
+
+contract.id  
+contract.version  
+contract.hash
+
+During enforcement the kernel verifies that the proposal's contract hash matches the compiled contract artifact used by the run.
+
+The kernel does not interpret governance policy structure directly.  
+It verifies deterministic contract identity only.
 
 ---
 
@@ -108,19 +119,21 @@ sealed runs are permitted to mutate governed state.
 
 ---
 
-## Enforcement Pipeline (v0.7.0)
+## Enforcement Pipeline (v0.9.0)
 
 Canonical stage order:
 
 1. run-structure
 2. structure-contract-version-gate
-3. independence
-4. integrity
-5. integrity-finalization
-6. publication
-7. publication-commit
+3. structure-contract-hash-gate
+4. independence
+5. integrity
+6. integrity-finalization
+7. publication
+8. publication-commit
 
 The pipeline is deterministic and ordered.
+The contract hash gate verifies that mutation proposals are bound to the exact compiled governance contract used during enforcement.
 
 ---
 
@@ -244,17 +257,6 @@ It is domain-agnostic.
 
 ---
 
-## Status
-
-v0.7.0 introduces explicit proposal and contract interface schemas, completing the runtime input hardening phase.
-
-CRI-CORE now operates as a deterministic governed mutation runtime with explicit structural input contracts.
-
-The enforcement interface is stable within the 0.x series but may evolve
-prior to 1.0.
-
----
-
 <div align="center">
-  <sub>© 2025 Waveframe Labs — Independent Open-Science Research Entity • Governed under the Aurora Research Initiative (ARI)</sub>
+  <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
 </div>
