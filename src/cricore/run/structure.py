@@ -4,11 +4,11 @@ title: "CRI-CORE Run Artifact Structural Validator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.2.0"
-doi: "TBD-0.2.0"
+version: "0.3.0"
+doi: "TBD-0.3.0"
 status: "Active"
 created: "2026-02-09"
-updated: "2026-02-16"
+updated: "2026-03-17"
 
 author:
   name: "Shawn C. Wright"
@@ -26,7 +26,6 @@ copyright:
   year: "2026"
 
 ai_assisted: "partial"
-ai_assistance_details: "AI-assisted refinement of structural run contract validation to support optional contract version gating (expected_contract_version) while preserving original structural semantics."
 
 dependencies:
   - "./paths.py"
@@ -36,7 +35,7 @@ dependencies:
   - "../contract/loader.py"
 
 anchors:
-  - "CRI-CORE-RunStructureValidator-v0.2.0"
+  - "CRI-CORE-RunStructureValidator-v0.3.0"
 ---
 """
 
@@ -129,7 +128,10 @@ def validate_run_structure(
             contract_errors.append(str(exc))
 
         # Required file checks
-        for p in required_file_paths(run_root):
+        for p in required_file_paths(
+            run_root,
+            contract_version=declared_contract_version,
+        ):
             if not p.exists():
                 missing_paths.append(str(p))
             elif not p.is_file():
