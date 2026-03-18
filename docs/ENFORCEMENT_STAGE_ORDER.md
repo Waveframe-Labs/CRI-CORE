@@ -3,10 +3,10 @@ title: "CRI-CORE Canonical Enforcement Stage Order"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.2.0"
+version: "0.3.0"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-02-27"
+updated: "2026-03-17"
 license: "Apache-2.0"
 ---
 
@@ -16,11 +16,12 @@ The CRI-CORE enforcement pipeline executes the following stages in fixed, normat
 
 1. run-structure
 2. structure-contract-version-gate
-3. independence
-4. integrity
-5. integrity-finalization
-6. publication
-7. publication-commit
+3. structure-contract-hash-gate
+4. independence
+5. integrity
+6. integrity-finalization
+7. publication
+8. publication-commit
 
 ## Stage Semantics (Normative Summary)
 
@@ -29,6 +30,18 @@ The CRI-CORE enforcement pipeline executes the following stages in fixed, normat
 
 - **structure-contract-version-gate**  
   Enforces expected contract version alignment.
+
+- **structure-contract-hash-gate**  
+  Enforces deterministic binding between the proposal and the compiled contract artifact.
+
+  The proposal-declared `contract.hash` MUST exactly match the `contract_hash`
+  of the compiled contract artifact present in the run.
+
+  This stage guarantees that:
+  - the proposal is bound to the exact contract evaluated by CRI-CORE
+  - contract substitution or mutation between proposal construction and enforcement is not possible
+
+  Failure results in immediate rejection of the proposal as structurally invalid.
 
 - **independence**  
   Enforces structural role separation and override constraints.
@@ -52,7 +65,7 @@ The CRI-CORE enforcement pipeline executes the following stages in fixed, normat
 
 - All stages are emitted in order.
 - No stage may be skipped.
-- Later stages may be blocked by prior failures.
+- Later stages MAY execute but MUST NOT override failure states of prior stages.
 - `publication-commit` is the sole commit gate.
 - `commit_allowed` is defined as the pass state of `publication-commit`.
 
