@@ -49,14 +49,10 @@ Issues = "https://github.com/Waveframe-Labs/CRI-CORE/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# ✅ CRITICAL ADDITION
 [tool.setuptools.package-data]
-"cricore.schema" = ["*.json"]
-
-# Optional but recommended (ensures inclusion even if MANIFEST issues)
-[tool.setuptools.include-package-data]
-true = true
+"cricore" = ["schema/*.json"]
