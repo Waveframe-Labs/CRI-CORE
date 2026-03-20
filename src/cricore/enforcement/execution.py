@@ -4,11 +4,11 @@ title: "CRI-CORE Enforcement Pipeline Orchestrator"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.2"
-doi: "TBD-0.4.2"
+version: "0.4.3"
+doi: "TBD-0.4.3"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-03-17"
+updated: "2026-03-19"
 
 author:
   name: "Shawn C. Wright"
@@ -35,7 +35,7 @@ dependencies:
   - "../results/stage.py"
 
 anchors:
-  - "CRI-CORE-EnforcementPipeline-v0.4.2"
+  - "CRI-CORE-EnforcementPipeline-v0.4.3"
 ---
 """
 
@@ -57,7 +57,6 @@ def _make_version_gate_stage(
     expected_contract_version: Optional[str],
     structure_stage: StageResult,
 ) -> StageResult:
-
     if expected_contract_version is None:
         return StageResult(
             stage_id="structure-contract-version-gate",
@@ -82,7 +81,9 @@ def _make_version_gate_stage(
         stage_id="structure-contract-version-gate",
         passed=False,
         failure_classes=structure_stage.failure_classes,
-        messages=["blocked: structure stage did not pass (version gate cannot be satisfied)"],
+        messages=[
+            "blocked: structure stage did not pass (version gate cannot be satisfied)"
+        ],
         checked_at_utc=structure_stage.checked_at_utc,
         engine_version=None,
     )
@@ -93,7 +94,6 @@ def _make_contract_hash_gate_stage(
     *,
     version_gate_stage: StageResult,
 ) -> StageResult:
-
     proposal_path = Path(run_path) / "proposal.json"
     compiled_contract_path = Path(run_path) / "compiled_contract.json"
 
@@ -108,21 +108,23 @@ def _make_contract_hash_gate_stage(
         )
 
     try:
-        with proposal_path.open() as f:
+        with proposal_path.open("r", encoding="utf-8") as f:
             proposal = json.load(f)
 
-        with compiled_contract_path.open() as f:
+        with compiled_contract_path.open("r", encoding="utf-8") as f:
             compiled_contract = json.load(f)
 
         proposal_hash = proposal["contract"]["hash"]
-        contract_hash = compiled_contract["contract_hash"]
+        compiled_contract_hash = compiled_contract["contract_hash"]
 
-        if proposal_hash != contract_hash:
+        if proposal_hash != compiled_contract_hash:
             return StageResult(
                 stage_id="structure-contract-hash-gate",
                 passed=False,
                 failure_classes=["contract-hash-mismatch"],
-                messages=["proposal contract hash does not match compiled contract artifact"],
+                messages=[
+                    "proposal contract hash does not match compiled contract artifact"
+                ],
                 checked_at_utc=version_gate_stage.checked_at_utc,
                 engine_version=None,
             )
@@ -153,6 +155,14 @@ def run_enforcement_pipeline(
     expected_contract_version: Optional[str] = None,
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> Tuple[List[StageResult], bool]:
+    """
+    Execute the canonical CRI-CORE enforcement pipeline.
+
+    Returns:
+        (results, commit_allowed)
+
+    commit_allowed is TRUE if and only if the publication-commit stage passes.
+    """
 
     results: List[StageResult] = []
 
@@ -170,7 +180,7 @@ def run_enforcement_pipeline(
     )
     results.append(version_gate_res)
 
-    # 3) Contract hash gate (FIXED)
+    # 3) Contract hash gate
     hash_gate_res = _make_contract_hash_gate_stage(
         run_path,
         version_gate_stage=version_gate_res,
