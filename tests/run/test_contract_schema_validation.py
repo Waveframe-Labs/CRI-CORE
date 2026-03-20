@@ -4,8 +4,8 @@ title: "CRI-CORE Contract Schema Validation Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.2.0"
-doi: "TBD-0.2.0"
+version: "0.2.1"
+doi: "TBD-0.2.1"
 status: "Active"
 created: "2026-03-09"
 updated: "2026-03-19"
@@ -27,18 +27,23 @@ dependencies:
   - "../../src/cricore/schema/contract.schema.json"
 
 anchors:
-  - "CRI-CORE-CONTRACT-SCHEMA-VALIDATION-v0.2.0"
+  - "CRI-CORE-CONTRACT-SCHEMA-VALIDATION-v0.2.1"
 ---
 """
 
 import json
+from pathlib import Path
 from importlib.resources import files
 
 import pytest
 from jsonschema import Draft202012Validator
 
 
+# ✅ schema from package
 SCHEMA_PATH = files("cricore").joinpath("schema/contract.schema.json")
+
+# ✅ fixtures from filesystem
+FIXTURE_ROOT = Path(__file__).parent.parent / "fixtures" / "contracts"
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +53,7 @@ def validator():
 
 
 def test_valid_contracts_pass_schema(validator):
-    base = files("tests").joinpath("fixtures/contracts/valid")
+    base = FIXTURE_ROOT / "valid"
 
     for path in base.iterdir():
         obj = json.loads(path.read_text(encoding="utf-8"))
@@ -56,7 +61,7 @@ def test_valid_contracts_pass_schema(validator):
 
 
 def test_invalid_contracts_fail_schema(validator):
-    base = files("tests").joinpath("fixtures/contracts/invalid")
+    base = FIXTURE_ROOT / "invalid"
 
     for path in base.iterdir():
         obj = json.loads(path.read_text(encoding="utf-8"))
