@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.9.0"
-doi: "TBD"
+version: "0.10.0"
+doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-17"
+updated: "2026-03-19"
 
 author:
   name: "Shawn C. Wright"
@@ -29,13 +29,13 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.9.0"
+  - "CRI-CORE v0.10.0"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.8.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.10.0 --- Deterministic Enforcement Kernel**
 
 CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
 
@@ -119,7 +119,7 @@ sealed runs are permitted to mutate governed state.
 
 ---
 
-## Enforcement Pipeline (v0.9.0)
+## Enforcement Pipeline (v0.10.0)
 
 Canonical stage order:
 
@@ -143,18 +143,18 @@ CRI-CORE enforces versioned structural guarantees:
 
 For `contract_version < 0.3.0`:
 
-- Structural validation - Independence
-enforcement 
-- Integrity manifest verification
+- Structural validation  
+- Independence enforcement  
+- Integrity manifest verification  
 
 For `contract_version ≥ 0.3.0`: 
 
-- binding.json required 
-- SEAL.json required 
-- Strict cryptographic seal validation 
-- Immutable artifact boundary enforcement
+- binding.json required  
+- SEAL.json required  
+- Strict cryptographic seal validation  
+- Immutable artifact boundary enforcement  
 
-Enforcement meaning is isolated per declared contract version.\
+Enforcement meaning is isolated per declared contract version.  
 Historical runs are validated under their declared version.
 
 ---
@@ -163,12 +163,12 @@ Historical runs are validated under their declared version.
 
 The kernel enforces structural role separation:
 
--   Explicit actor identities
--   Optional declared role requirements (`required_roles`)
--   Strict prohibition on multi-role identity when roles are required
--   Explicit override pathway (recorded, never implicit)
+- Explicit actor identities
+- Optional declared role requirements (`required_roles`)
+- Strict prohibition on multi-role identity when roles are required
+- Explicit override pathway (recorded, never implicit)
 
-The kernel evaluates identity structure only.\
+The kernel evaluates identity structure only.  
 It does not evaluate competence or review quality.
 
 ---
@@ -177,21 +177,21 @@ It does not evaluate competence or review quality.
 
 Finalized runs must include:
 
--   Deterministic SHA256 manifest
--   Payload archive
--   Structural binding artifact
--   Deterministic SEAL.json
+- Deterministic SHA256 manifest
+- Payload archive
+- Structural binding artifact
+- Deterministic SEAL.json
 
 The seal covers:
 
--   All run files (deterministic ordering)
--   Binding artifact
--   Manifest hash
--   Payload hash
+- All run files (deterministic ordering)
+- Binding artifact
+- Manifest hash
+- Payload hash
 
 Any mutation changes the seal hash.
 
-The seal provides tamper evidence.\
+The seal provides tamper evidence.  
 It is not a signature.
 
 ---
@@ -206,8 +206,20 @@ It emits a deterministic authorization decision:
 
 The caller decides whether to mutate.
 
-The kernel centralizes the commit decision.\
+The kernel centralizes the commit decision.  
 It does not enforce it outside its invocation boundary.
+
+---
+
+## Runtime Packaging Guarantees
+
+CRI-CORE is distributed as a self-contained runtime.
+
+- Schema artifacts are embedded within the package (`cricore.schema`)
+- No dependency on repository-relative paths
+- Deterministic behavior across local, CI, and installed environments
+
+All validation logic operates against packaged artifacts, not filesystem assumptions.
 
 ---
 
@@ -215,12 +227,12 @@ It does not enforce it outside its invocation boundary.
 
 CRI-CORE does not:
 
--   Interpret lifecycle semantics
--   Judge correctness of domain objects
--   Evaluate epistemic sufficiency
--   Enforce governance policy meaning
--   Perform distributed consensus
--   Prevent bypass outside invocation
+- Interpret lifecycle semantics
+- Judge correctness of domain objects
+- Evaluate epistemic sufficiency
+- Enforce governance policy meaning
+- Perform distributed consensus
+- Prevent bypass outside invocation
 
 It is a deterministic structural gate only.
 
@@ -228,13 +240,13 @@ It is a deterministic structural gate only.
 
 ## Design Principles
 
--   Deterministic evaluation
--   No network calls
--   No model calls
--   No semantic inference
--   Opaque reference handling
--   Versioned enforcement meaning
--   Strict immutability after finalization
+- Deterministic evaluation
+- No network calls
+- No model calls
+- No semantic inference
+- Opaque reference handling
+- Versioned enforcement meaning
+- Strict immutability after finalization
 
 ---
 
@@ -242,16 +254,16 @@ It is a deterministic structural gate only.
 
 CRI-CORE is designed to sit beneath:
 
--   Workflow engines
--   CI pipelines
--   Agent execution runtimes
--   Domain governance systems
+- Workflow engines
+- CI pipelines
+- Agent execution runtimes
+- Domain governance systems
 
 It provides:
 
--   Structural admissibility validation
--   Cryptographic immutability guarantees
--   Centralized commit authorization
+- Structural admissibility validation
+- Cryptographic immutability guarantees
+- Centralized commit authorization
 
 It is domain-agnostic.
 
