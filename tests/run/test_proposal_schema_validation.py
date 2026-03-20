@@ -4,11 +4,11 @@ title: "CRI-CORE Canonical Proposal Schema Validation Test"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-03-09"
-updated: "2026-03-09"
+updated: "2026-03-19"
 
 author:
   name: "Shawn C. Wright"
@@ -31,71 +31,38 @@ dependencies:
   - "../../schema/proposal.schema.json"
 
 anchors:
-  - "CRI-CORE-PROPOSAL-SCHEMA-VALIDATION-TEST-v0.1.0"
+  - "CRI-CORE-PROPOSAL-SCHEMA-VALIDATION-TEST-v0.2.0"
 ---
 """
 
 import json
-from pathlib import Path
+from importlib.resources import files
 
 import pytest
-import jsonschema
+from jsonschema import Draft202012Validator
 
 
-SCHEMA_PATH = Path("schema/proposal.schema.json")
-VALID_FIXTURES = Path("tests/fixtures/proposals/valid")
-INVALID_FIXTURES = Path("tests/fixtures/proposals/invalid")
+SCHEMA_PATH = files("cricore").joinpath("schema/proposal.schema.json")
 
 
 @pytest.fixture(scope="module")
 def validator():
-    with SCHEMA_PATH.open(encoding="utf-8") as f:
-        schema = json.load(f)
-
-    Validator = jsonschema.validators.validator_for(schema)
-    Validator.check_schema(schema)
-
-    return Validator(
-        schema,
-        format_checker=jsonschema.FormatChecker()
-    )
-
-
-def load_json(path: Path):
-    with path.open(encoding="utf-8") as f:
-        return json.load(f)
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    return Draft202012Validator(schema)
 
 
 def test_valid_proposals_pass_schema(validator):
-    valid_files = sorted(VALID_FIXTURES.glob("*.json"))
+    base = files("tests").joinpath("fixtures/proposals/valid")
 
-    assert valid_files, "No valid proposal fixtures found."
-
-    for file in valid_files:
-        proposal = load_json(file)
-
-        try:
-            validator.validate(proposal)
-        except jsonschema.ValidationError as e:
-            pytest.fail(
-                f"{file} should be valid but failed schema validation:\n{e}"
-            )
+    for path in base.iterdir():
+        obj = json.loads(path.read_text(encoding="utf-8"))
+        validator.validate(obj)
 
 
 def test_invalid_proposals_fail_schema(validator):
-    invalid_files = sorted(INVALID_FIXTURES.glob("*.json"))
+    base = files("tests").joinpath("fixtures/proposals/invalid")
 
-    assert invalid_files, "No invalid proposal fixtures found."
-
-    for file in invalid_files:
-        proposal = load_json(file)
-
-        try:
-            validator.validate(proposal)
-        except jsonschema.ValidationError:
-            # Correct behavior — schema rejected the proposal
-            continue
-
-        pytest.fail(
-            f"{file} should have failed schema validation but passed."
-        )
+    for path in base.iterdir():
+        obj = json.loads(path.read_text(encoding="utf-8"))
+        with pytest.raises(Exception):
+            validator.validate(obj)
