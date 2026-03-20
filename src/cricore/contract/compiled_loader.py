@@ -4,11 +4,11 @@ title: "CRI-CORE Compiled Contract Loader"
 filetype: "source"
 type: "implementation"
 domain: "enforcement"
-version: "0.1.0"
-doi: "TBD-0.1.0"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-03-10"
-updated: "2026-03-10"
+updated: "2026-03-19"
 
 author:
   name: "Shawn C. Wright"
@@ -28,12 +28,11 @@ copyright:
 ai_assisted: "partial"
 
 dependencies:
-  - "../../../schema/contract.schema.json"
   - "./errors.py"
   - "./model.py"
 
 anchors:
-  - "CRI-CORE-COMPILED-CONTRACT-LOADER-v0.1.0"
+  - "CRI-CORE-COMPILED-CONTRACT-LOADER-v0.2.0"
 ---
 """
 from __future__ import annotations
@@ -47,31 +46,55 @@ from jsonschema import Draft202012Validator
 from .errors import CompiledContractLoadError, CompiledContractValidationError
 from .model import CompiledContract
 
+# NEW: correct way to access packaged data
+import importlib.resources as pkg_resources
 
-SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schema" / "contract.schema.json"
+
+SCHEMA_PACKAGE = "cricore.schema"
+SCHEMA_NAME = "contract.schema.json"
 
 
 def _load_schema() -> Mapping[str, Any]:
+    """
+    Load schema from:
+    1) Installed package (preferred)
+    2) Local repo fallback (dev mode)
+    """
+
+    # --- Attempt 1: package resource (correct for PyPI installs)
     try:
-        raw = SCHEMA_PATH.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise CompiledContractLoadError(
-            f"failed to read compiled contract schema: {exc}"
-        ) from exc
+        with pkg_resources.files(SCHEMA_PACKAGE).joinpath(SCHEMA_NAME).open("r", encoding="utf-8") as f:
+            schema = json.load(f)
 
-    try:
-        schema = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise CompiledContractLoadError(
-            f"invalid JSON in compiled contract schema: {exc}"
-        ) from exc
+        if not isinstance(schema, Mapping):
+            raise CompiledContractLoadError(
+                "compiled contract schema must contain a JSON object"
+            )
 
-    if not isinstance(schema, Mapping):
-        raise CompiledContractLoadError(
-            "compiled contract schema must contain a JSON object"
-        )
+        return schema
 
-    return schema
+    except Exception:
+        # --- Attempt 2: fallback to repo structure (dev mode)
+        fallback_path = Path(__file__).resolve().parents[3] / "schema" / SCHEMA_NAME
+
+        try:
+            raw = fallback_path.read_text(encoding="utf-8")
+            schema = json.loads(raw)
+        except OSError as exc:
+            raise CompiledContractLoadError(
+                f"failed to read compiled contract schema (package + fallback): {exc}"
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise CompiledContractLoadError(
+                f"invalid JSON in compiled contract schema: {exc}"
+            ) from exc
+
+        if not isinstance(schema, Mapping):
+            raise CompiledContractLoadError(
+                "compiled contract schema must contain a JSON object"
+            )
+
+        return schema
 
 
 _SCHEMA = _load_schema()
@@ -82,13 +105,13 @@ def load_compiled_contract(path: Path) -> CompiledContract:
     """
     Load and validate a compiled contract artifact.
 
-    This function performs:
+    Performs:
       - file presence checks
       - JSON parsing
       - schema validation
-      - normalization into a stable kernel-facing model
+      - normalization into kernel model
 
-    It does not interpret governance semantics.
+    Does not interpret governance semantics.
     """
 
     if not path.exists():
