@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.9.0"
-doi: "TBD-0.9.0"
+version: "0.10.0"
+doi: "TBD-0.10.0"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-17"
+updated: "2026-03-19"
 
 author:
   name: "Shawn C. Wright"
@@ -27,13 +27,38 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.9.0"
+  - "CRI-CORE-CHANGELOG-v0.10.0"
 ---
 # Changelog
 
 All notable changes to CRI-CORE are documented here.
 
 This project follows semantic versioning (0.x pre-stable).
+
+---
+
+## [0.10.0] - 2026-03-19
+
+### Added
+- Packaged schema distribution within `cricore.schema`
+- Package-relative schema loading for compiled contract validation
+- Test coverage for packaged schema resolution behavior
+
+### Changed
+- Schema loading refactored to use package resources instead of filesystem-relative paths
+- Test suite updated to align with runtime packaging model (schema via package, fixtures via filesystem)
+- Enforcement runtime now fully decoupled from repository layout assumptions
+
+### Fixed
+- Resolved schema loading failure in installed environments (site-packages)
+- Fixed invalid setuptools configuration for `include-package-data`
+- Corrected package data inclusion for schema artifacts
+- Eliminated dependency on repo-root `schema/` directory during runtime and testing
+
+### Notes
+- This release transitions CRI-CORE from a repository-bound implementation to a fully self-contained distributable runtime.
+- Schema artifacts are now embedded within the package and guaranteed to be available in all execution environments.
+- Test suite now validates runtime behavior rather than repository structure, strengthening enforcement guarantees.
 
 ---
 
