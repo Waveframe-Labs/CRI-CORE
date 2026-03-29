@@ -10,7 +10,7 @@ def load_json(path):
 
 
 # --- POINT THIS TO YOUR DEMO RUN ---
-BASE_PATH = Path(__file__).resolve().parents[2] / "governed-finance-mutation-demo" / "runs" / "allowed-run"
+BASE_PATH = Path("C:/GitHub/governed-finance-mutation-demo/runs/allowed-run")
 
 proposal_path = BASE_PATH / "proposal.json"
 contract_path = BASE_PATH / "compiled_contract.json"
