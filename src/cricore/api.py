@@ -1,62 +1,33 @@
-"""
----
-title: "CRI-CORE Public API"
-filetype: "operational"
-type: "interface"
-domain: "enforcement"
-version: "0.1.1"
-doi: "TBD-0.1.1"
-status: "Active"
-created: "2026-03-29"
-updated: "2026-03-29"
-
-author:
-  name: "Shawn C. Wright"
-  email: "swright@waveframelabs.org"
-
-maintainer:
-  name: "Waveframe Labs"
-  url: "https://waveframelabs.org"
-
-license: "Apache-2.0"
-
-ai_assisted: "partial"
-
-anchors:
-  - "CRI-CORE-API-v0.1.1"
----
-"""
-
-"""
----
-title: "CRI-CORE Public API"
-filetype: "operational"
-type: "interface"
-domain: "enforcement"
-version: "0.1.1"
-doi: "TBD-0.1.1"
-status: "Active"
-created: "2026-03-29"
-updated: "2026-03-29"
-
-author:
-  name: "Shawn C. Wright"
-  email: "swright@waveframelabs.org"
-
-maintainer:
-  name: "Waveframe Labs"
-  url: "https://waveframelabs.org"
-
-license: "Apache-2.0"
-
-ai_assisted: "partial"
-
-anchors:
-  - "CRI-CORE-API-Evaluate-v0.1.1"
----
-"""
-
 from __future__ import annotations
+
+"""
+---
+title: "CRI-CORE Public API"
+filetype: "operational"
+type: "interface"
+domain: "enforcement"
+version: "0.1.2"
+doi: "TBD-0.1.2"
+status: "Active"
+created: "2026-03-29"
+updated: "2026-03-29"
+
+author:
+  name: "Shawn C. Wright"
+  email: "swright@waveframelabs.org"
+
+maintainer:
+  name: "Waveframe Labs"
+  url: "https://waveframelabs.org"
+
+license: "Apache-2.0"
+
+ai_assisted: "partial"
+
+anchors:
+  - "CRI-CORE-API-Evaluate-v0.1.2"
+---
+"""
 
 import json
 import tempfile
