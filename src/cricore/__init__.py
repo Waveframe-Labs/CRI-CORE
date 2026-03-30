@@ -13,10 +13,11 @@ except PackageNotFoundError:
 
 # Public API surface
 from .enforcement.execution import run_enforcement_pipeline
-from .api import evaluate
+from .api import evaluate, evaluate_run
 
 __all__ = [
     "__version__",
     "run_enforcement_pipeline",
     "evaluate",
+    "evaluate_run",
 ]
