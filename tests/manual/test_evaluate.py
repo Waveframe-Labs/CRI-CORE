@@ -1,35 +1,15 @@
-import json
-from pathlib import Path
-
-from cricore import evaluate
-
-
-def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+from cricore import evaluate_run
 
 
 # --- POINT THIS TO YOUR DEMO RUN ---
-BASE_PATH = Path("C:/GitHub/governed-finance-mutation-demo/runs/allowed-run")
-
-proposal_path = BASE_PATH / "proposal.json"
-contract_path = BASE_PATH / "compiled_contract.json"
-
-proposal = load_json(proposal_path)
-compiled_contract = load_json(contract_path)
+run_path = "C:/GitHub/governed-finance-mutation-demo/runs/allowed-run"
 
 
 # --- RUN EVALUATION ---
-results, allowed = evaluate(proposal, compiled_contract)
+allowed = evaluate_run(run_path)
 
 
 # --- OUTPUT ---
-print("\n=== EVALUATE RESULT ===\n")
-
+print("\n=== EVALUATE_RUN RESULT ===\n")
 print("Commit allowed:", allowed)
-
-print("\nStage Results:")
-for r in results:
-    print(f"{r.stage_id}: {'PASS' if r.passed else 'FAIL'}")
-
-print("\n========================\n")
+print("\n===========================\n")
