@@ -7,7 +7,7 @@ version: "0.10.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-19"
+updated: "2026-03-29"
 
 author:
   name: "Shawn C. Wright"
@@ -45,6 +45,31 @@ The kernel does not interpret meaning.
 
 It evaluates structure and invariants only.
 
+**CRI-CORE is a deterministic execution control layer for AI-driven actions.**
+
+Most systems today can detect or log bad decisions.
+
+Very few systems can **stop them before they execute**.
+
+CRI-CORE exists to control that moment.
+
+---
+
+## What It Does
+
+CRI-CORE sits directly at the **execution boundary** — the point where a system attempts to act.
+
+It evaluates a proposed action and returns a single decision:
+
+- ✅ allow execution  
+- ❌ block execution  
+
+No warnings.  
+No after-the-fact auditing.  
+
+**The action either happens — or it doesn’t.**
+
+---
 ---
 
 ## Installation
