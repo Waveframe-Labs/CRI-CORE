@@ -1,15 +1,17 @@
-from cricore import evaluate_run
+from cricore.enforcement.execution import run_enforcement_pipeline
 
-
-# --- POINT THIS TO YOUR DEMO RUN ---
 run_path = "C:/GitHub/governed-finance-mutation-demo/runs/allowed-run"
 
+results, allowed = run_enforcement_pipeline(run_path)
 
-# --- RUN EVALUATION ---
-allowed = evaluate_run(run_path)
+print("\n=== DEBUG RESULT ===\n")
 
-
-# --- OUTPUT ---
-print("\n=== EVALUATE_RUN RESULT ===\n")
 print("Commit allowed:", allowed)
-print("\n===========================\n")
+
+print("\nStage Results:")
+for r in results:
+    print(f"{r.stage_id}: {'PASS' if r.passed else 'FAIL'}")
+    for msg in r.messages:
+        print(f"  → {msg}")
+
+print("\n====================\n")
