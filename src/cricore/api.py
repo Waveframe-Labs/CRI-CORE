@@ -6,8 +6,8 @@ title: "CRI-CORE Public API"
 filetype: "operational"
 type: "interface"
 domain: "enforcement"
-version: "0.1.2"
-doi: "TBD-0.1.2"
+version: "0.2.0"
+doi: "TBD-0.2.0"
 status: "Active"
 created: "2026-03-29"
 updated: "2026-03-29"
@@ -25,7 +25,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-API-Evaluate-v0.1.2"
+  - "CRI-CORE-API-Evaluate-v0.2.0"
 ---
 """
 
@@ -43,13 +43,16 @@ def evaluate(
     compiled_contract: Dict[str, Any],
 ) -> Tuple[List[StageResult], bool]:
     """
-    Evaluate whether a proposed action is allowed to execute.
+    Convenience evaluation interface.
 
-    IMPORTANT:
+    NOTE:
     - proposal must already be normalized
     - compiled_contract must already be compiled
 
-    This is a convenience interface over the enforcement pipeline.
+    This function materializes a minimal run structure and executes the pipeline.
+    It is intended for experimentation and local evaluation.
+
+    For strict, production-aligned enforcement, use evaluate_run().
     """
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -85,6 +88,28 @@ def evaluate(
         results, commit_allowed = run_enforcement_pipeline(str(run_path))
 
         return results, commit_allowed
+
+
+def evaluate_run(run_path: str) -> bool:
+    """
+    Canonical CRI-CORE enforcement entry point.
+
+    Evaluates a fully materialized run directory and returns whether the
+    proposed action is allowed to commit.
+
+    Args:
+        run_path: Path to a structured run directory
+
+    Returns:
+        commit_allowed (bool)
+
+    This function preserves full enforcement semantics and should be used
+    in production or system integrations.
+    """
+
+    _, commit_allowed = run_enforcement_pipeline(run_path)
+
+    return commit_allowed
 
 
 def _write_json(path: Path, data: Dict[str, Any]) -> None:
