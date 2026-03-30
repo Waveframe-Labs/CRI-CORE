@@ -1,8 +1,8 @@
-from cricore.enforcement.execution import run_enforcement_pipeline
+from cricore import evaluate_run
 
 run_path = "C:/GitHub/governed-finance-mutation-demo/runs/allowed-run"
 
-results, allowed = run_enforcement_pipeline(run_path)
+allowed = evaluate_run(run_path)
 
 print("\n=== DEBUG RESULT ===\n")
 
