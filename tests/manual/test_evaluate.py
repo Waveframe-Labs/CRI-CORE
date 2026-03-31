@@ -1,6 +1,79 @@
-from cricore import evaluate
+from pathlib import Path
+import shutil
+import json
+from datetime import datetime, timezone
 
-run_path = "C:/GitHub/governed-finance-mutation-demo/runs/allowed-run"
+from cricore import evaluate
+from cricore.integrity.finalize import finalize_run_integrity
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
+
+def utc_now():
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def write_json(path: Path, data: dict):
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+# -----------------------------
+# Build fresh test run
+# -----------------------------
+
+RUN_PATH = Path("tests/tmp_run")
+
+if RUN_PATH.exists():
+    shutil.rmtree(RUN_PATH)
+
+RUN_PATH.mkdir(parents=True)
+
+(RUN_PATH / "validation").mkdir()
+
+write_json(RUN_PATH / "contract.json", {
+    "run_id": "test-run",
+    "contract_id": "test-contract",
+    "contract_version": "0.3.0",
+    "contract_hash": "dummy-hash",
+    "created_utc": utc_now(),
+})
+
+write_json(RUN_PATH / "compiled_contract.json", {
+    "contract_hash": "dummy-hash"
+})
+
+write_json(RUN_PATH / "proposal.json", {
+    "contract": {
+        "id": "test-contract",
+        "version": "0.3.0",
+        "hash": "dummy-hash"
+    }
+})
+
+(RUN_PATH / "report.md").write_text("# Test Report\n", encoding="utf-8")
+
+write_json(RUN_PATH / "approval.json", {
+    "approved_by": "cfo",
+    "timestamp": utc_now()
+})
+
+write_json(RUN_PATH / "randomness.json", {
+    "seed": 42
+})
+
+
+# -----------------------------
+# FINALIZE (critical)
+# -----------------------------
+
+finalize_run_integrity(RUN_PATH)
+
+
+# -----------------------------
+# Evaluate
+# -----------------------------
 
 run_context = {
     "identities": {
@@ -19,7 +92,7 @@ run_context = {
 }
 
 result = evaluate(
-    run_path=run_path,
+    run_path=str(RUN_PATH),
     run_context=run_context,
 )
 
