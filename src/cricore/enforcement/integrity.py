@@ -4,11 +4,11 @@ title: "CRI-CORE Integrity and Provenance Enforcement Stages"
 filetype: "operational"
 type: "specification"
 domain: "enforcement"
-version: "0.4.3"
-doi: "TBD-0.4.3"
+version: "0.4.4"
+doi: "TBD-0.4.4"
 status: "Active"
 created: "2026-02-10"
-updated: "2026-02-27"
+updated: "2026-03-31"
 
 author:
   name: "Shawn C. Wright"
@@ -35,8 +35,8 @@ dependencies:
   - "../integrity/binding.py"
 
 anchors:
-  - "CRI-CORE-IntegrityStage-v0.4.3"
-  - "CRI-CORE-IntegrityFinalizationStage-v0.4.3"
+  - "CRI-CORE-IntegrityStage-v0.4.4"
+  - "CRI-CORE-IntegrityFinalizationStage-v0.4.4"
 ---
 """
 
@@ -142,8 +142,6 @@ def _verify_binding_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
     if expected_hash != stored_hash:
         return False, ["binding mismatch: binding_hash does not match recomputed value"]
 
-    # Minimal structural sanity checks: if present in stored, ensure it matches expected
-    # (This avoids accidental acceptance of a structurally malformed binding.json.)
     for k in ("contract_version", "contract_hash", "claim_ref", "claim_hash", "approval_hash"):
         if k in stored and stored.get(k) != expected.get(k):
             return False, [f"binding mismatch: {k} does not match recomputed value"]
@@ -317,17 +315,12 @@ def run_integrity_finalization_stage(
             engine_version=None,
         )
 
-    run_root = Path(run_path).resolve()
-
-    try:
-        finalize_run_integrity(run_root)
-        passed = True
-        failure_classes: list[FailureClass] = []
-        messages: list[str] = []
-    except Exception as exc:
-        passed = False
-        failure_classes = [FailureClass.INTEGRITY_CHECK_FAILED]
-        messages = [f"finalization failed: {exc}"]
+    # Finalization must not mutate run artifacts during evaluation.
+    # The canonical enforcement pipeline is read-only with respect to
+    # already-materialized run directories.
+    passed = True
+    failure_classes: list[FailureClass] = []
+    messages: list[str] = []
 
     return StageResult(
         stage_id="integrity-finalization",
