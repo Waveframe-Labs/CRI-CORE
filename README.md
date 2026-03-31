@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.10.0"
+version: "0.11.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-29"
+updated: "2026-03-31"
 
 author:
   name: "Shawn C. Wright"
@@ -29,13 +29,15 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.10.0"
+  - "CRI-CORE v0.11.0"
   - "Deterministic Enforcement Kernel"
 ---
 
 # CRI-CORE
 
-**CRI-CORE v0.10.0 --- Deterministic Enforcement Kernel**
+**CRI-CORE v0.11.0 — Deterministic Enforcement Kernel**
+
+**Concept DOI:** https://doi.org/10.5281/zenodo.19080238
 
 CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
 
@@ -70,7 +72,6 @@ No after-the-fact auditing.
 **The action either happens — or it doesn’t.**
 
 ---
----
 
 ## Installation
 
@@ -86,22 +87,33 @@ Requires Python 3.10+.
 
 The supported public entrypoint is:
 
-    from cricore.enforcement.execution import run_enforcement_pipeline
+    from cricore import evaluate
 
 Example:
 
-    from cricore.enforcement.execution import run_enforcement_pipeline
+    from cricore import evaluate
 
-    results, commit_allowed = run_enforcement_pipeline(
+    result = evaluate(
         run_path=".",
-        expected_contract_version="0.3.0"
+        run_context={
+            "identities": {},
+            "integrity": {},
+            "publication": {},
+        },
     )
 
-The function returns:
+The function returns an `EvaluationResult`:
 
-    (results: List[StageResult], commit_allowed: bool)
+    result.commit_allowed   # bool
+    result.failed_stages    # List[str]
+    result.summary          # str
 
-`commit_allowed` is the sole commit authorization signal.
+Typical usage:
+
+    if result.commit_allowed:
+        execute()
+    else:
+        block(result.summary)
 
 ---
 
@@ -144,7 +156,7 @@ sealed runs are permitted to mutate governed state.
 
 ---
 
-## Enforcement Pipeline (v0.10.0)
+## Enforcement Pipeline (v0.11.0)
 
 Canonical stage order:
 
@@ -158,6 +170,7 @@ Canonical stage order:
 8. publication-commit
 
 The pipeline is deterministic and ordered.
+
 The contract hash gate verifies that mutation proposals are bound to the exact compiled governance contract used during enforcement.
 
 ---
@@ -291,6 +304,28 @@ It provides:
 - Centralized commit authorization
 
 It is domain-agnostic.
+
+---
+
+## Citation
+
+If you use CRI-CORE in your work, please cite the concept DOI:
+
+CRI-CORE — Deterministic Enforcement Kernel  
+Wright, Shawn C.; Waveframe Labs (2026)  
+https://doi.org/10.5281/zenodo.19080238
+
+### BibTeX
+
+```bibtex
+@software{cricore_concept_2026,
+  title   = {CRI-CORE: Deterministic Enforcement Kernel},
+  author  = {Wright, Shawn C. and Waveframe Labs},
+  year    = {2026},
+  doi     = {10.5281/zenodo.19080238},
+  url     = {https://doi.org/10.5281/zenodo.19080238}
+}
+```
 
 ---
 
