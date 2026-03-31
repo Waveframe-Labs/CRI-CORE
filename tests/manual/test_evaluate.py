@@ -7,10 +7,6 @@ from cricore import evaluate
 from cricore.integrity.finalize import finalize_run_integrity
 
 
-# -----------------------------
-# Helpers
-# -----------------------------
-
 def utc_now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -19,24 +15,33 @@ def write_json(path: Path, data: dict):
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-# -----------------------------
-# Build fresh test run
-# -----------------------------
-
 RUN_PATH = Path("tests/tmp_run")
 
 if RUN_PATH.exists():
     shutil.rmtree(RUN_PATH)
 
 RUN_PATH.mkdir(parents=True)
-
 (RUN_PATH / "validation").mkdir()
 
+
+# -----------------------------
+# Required artifacts
+# -----------------------------
+
+# Claim (NEW — required)
+write_json(RUN_PATH / "claim.json", {
+    "claim_id": "test-claim",
+    "created_utc": utc_now(),
+    "content": "test claim"
+})
+
+# Contract WITH claim_ref
 write_json(RUN_PATH / "contract.json", {
     "run_id": "test-run",
     "contract_id": "test-contract",
     "contract_version": "0.3.0",
     "contract_hash": "dummy-hash",
+    "claim_ref": "claim.json",   # 🔥 REQUIRED
     "created_utc": utc_now(),
 })
 
@@ -65,7 +70,7 @@ write_json(RUN_PATH / "randomness.json", {
 
 
 # -----------------------------
-# FINALIZE (critical)
+# FINALIZE
 # -----------------------------
 
 finalize_run_integrity(RUN_PATH)
