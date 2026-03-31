@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cricore"
-version = "0.10.0"
+version = "0.11.0"
 description = "CRI-CORE — Deterministic structural enforcement kernel for governed state transitions."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,13 +19,18 @@ keywords = [
     "enforcement",
     "deterministic",
     "reproducibility",
-    "separation-of-duties"
+    "separation-of-duties",
+    "ai-governance",
+    "execution-control",
+    "commit-gating"
 ]
 
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -46,6 +51,7 @@ dev = [
 Homepage = "https://waveframelabs.org"
 Source = "https://github.com/Waveframe-Labs/CRI-CORE"
 Issues = "https://github.com/Waveframe-Labs/CRI-CORE/issues"
+Documentation = "https://waveframelabs.org/tools.html"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
