@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.10.0"
-doi: "TBD-0.10.0"
+version: "0.11.0"
+doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-19"
+updated: "2026-03-31"
 
 author:
   name: "Shawn C. Wright"
@@ -27,13 +27,35 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.10.0"
+  - "CRI-CORE-CHANGELOG-v0.11.0"
 ---
 # Changelog
 
 All notable changes to CRI-CORE are documented here.
 
 This project follows semantic versioning (0.x pre-stable).
+
+---
+
+## [0.11.0] - 2026-03-31
+
+### Added
+- Public API surface via `cricore.evaluate`
+- `EvaluationResult` object:
+  - `commit_allowed`
+  - `failed_stages`
+  - `summary`
+- Simplified evaluation interface for direct integration into external systems
+
+### Changed
+- Public usage pattern standardized around `evaluate()` instead of direct pipeline invocation
+- README updated to reflect canonical entrypoint and usage pattern
+- Internal pipeline remains fully deterministic and unchanged
+
+### Notes
+- This release introduces the first stable usability layer over the CRI-CORE kernel.
+- No changes to enforcement semantics, stage ordering, or validation logic.
+- This is a surface-level improvement enabling easier adoption without altering kernel guarantees.
 
 ---
 
