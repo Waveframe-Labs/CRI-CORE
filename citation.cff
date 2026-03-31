@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+
+title: "CRI-CORE: Deterministic Enforcement Kernel"
+
+message: "If you use CRI-CORE, please cite it using the metadata below."
+
+type: software
+
+authors:
+  - family-names: "Wright"
+    given-names: "Shawn C."
+    orcid: "https://orcid.org/0009-0006-6043-9295"
+
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.19080238"
+
+repository-code: "https://github.com/waveframe-labs/CRI-CORE"
+
+url: "https://github.com/waveframe-labs/CRI-CORE"
+
+license: "Apache-2.0"
+
+version: "0.11.0"
+
+date-released: "2026-03-31"
