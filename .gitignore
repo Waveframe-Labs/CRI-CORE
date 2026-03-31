@@ -3,3 +3,4 @@ __pycache__/
 /src/cricore.egg-info
 /dist
 .pytest_cache/
+/tests/tmp_run
