@@ -24,7 +24,15 @@ result = evaluate(
 )
 
 print("\n=== DEBUG RESULT ===\n")
+
 print("Commit allowed:", result.commit_allowed)
 print("Failed stages:", result.failed_stages)
 print("Summary:", result.summary)
+
+print("\nStage Results:")
+for r in result.stage_results:
+    print(f"{r.stage_id}: {'PASS' if r.passed else 'FAIL'}")
+    for msg in r.messages:
+        print(f"  → {msg}")
+
 print("\n====================\n")
