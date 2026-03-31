@@ -2,10 +2,9 @@ from cricore.enforcement.execution import run_enforcement_pipeline
 
 run_path = "C:/GitHub/governed-finance-mutation-demo/runs/allowed-run"
 
+# Minimal valid run_context for independence stage
 run_context = {
-    "independence": {},
-    "integrity": {},
-    "publication": {},
+    "identities": {}
 }
 
 results, allowed = run_enforcement_pipeline(
