@@ -4,7 +4,7 @@ title: "CRI-CORE Proposal Evaluation Interface"
 filetype: "source"
 type: "execution-interface"
 domain: "integration"
-version: "0.1.0"
+version: "0.1.1"
 status: "Active"
 created: "2026-04-01"
 updated: "2026-04-01"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-Interface-evaluate_proposal-v0.1.0"
+  - "CRI-CORE-Interface-evaluate_proposal-v0.1.1"
 ---
 """
 
@@ -43,8 +43,9 @@ def _write_json(path: Path, data: Dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+def _utc_now_safe() -> str:
+    # Windows-safe timestamp (no colons)
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 # -----------------------------
@@ -57,36 +58,9 @@ def evaluate_proposal(
     *,
     run_id: Optional[str] = None,
 ) -> Any:
-    """
-    Evaluate a mutation proposal against a compiled governance contract.
-
-    This function provides a minimal integration surface for CRI-CORE by:
-    - compiling a policy into a contract
-    - constructing a deterministic run artifact
-    - finalizing integrity (binding + seal)
-    - invoking the CRI-CORE enforcement kernel
-
-    Parameters
-    ----------
-    proposal : dict
-        Canonical mutation proposal object.
-    policy : dict
-        Governance policy definition (input to contract compiler).
-    run_id : str, optional
-        Optional override for run identifier.
-
-    Returns
-    -------
-    EvaluationResult
-        Result object returned by `cricore.evaluate`.
-    """
-
-    # -----------------------------
-    # Prepare run context
-    # -----------------------------
 
     if run_id is None:
-        run_id = f"run-{_utc_now()}"
+        run_id = f"run-{_utc_now_safe()}"
 
     temp_root = Path(tempfile.mkdtemp(prefix="cricore_interface_"))
     run_path = temp_root / run_id
@@ -101,7 +75,6 @@ def evaluate_proposal(
     compiled_contract = compile_policy(policy)
     contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
 
-    # bind contract hash to proposal
     if "contract" not in proposal:
         raise ValueError("proposal must include 'contract' field")
 
@@ -118,7 +91,7 @@ def evaluate_proposal(
             "contract_id": policy.get("contract_id"),
             "contract_version": policy.get("contract_version"),
             "contract_hash": contract_hash,
-            "created_utc": _utc_now(),
+            "created_utc": _utc_now_safe(),
         },
     )
 
@@ -131,7 +104,7 @@ def evaluate_proposal(
         run_path / "approval.json",
         {
             "approved_by": "system",
-            "timestamp": _utc_now(),
+            "timestamp": _utc_now_safe(),
         },
     )
 
