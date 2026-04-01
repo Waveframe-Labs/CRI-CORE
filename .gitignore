@@ -5,3 +5,4 @@ __pycache__/
 .pytest_cache/
 /tests/tmp_run
 /tests/test-run
+/src/cricore/results/claim-lifecycle-demo
