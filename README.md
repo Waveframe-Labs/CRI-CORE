@@ -32,7 +32,6 @@ anchors:
   - "CRI-CORE v0.11.0"
   - "Deterministic Enforcement Kernel"
 ---
-
 # CRI-CORE
 
 **CRI-CORE v0.11.0 — Deterministic Enforcement Kernel**
@@ -47,13 +46,11 @@ The kernel does not interpret meaning.
 
 It evaluates structure and invariants only.
 
-**CRI-CORE is a deterministic execution control layer for AI-driven actions.**
+CRI-CORE is a deterministic execution gate for state mutations in AI-assisted and automated systems.
 
-Most systems today can detect or log bad decisions.
+Most systems detect or log issues after execution.
 
-Very few systems can **stop them before they execute**.
-
-CRI-CORE exists to control that moment.
+CRI-CORE enforces a decision boundary before a state mutation is allowed to occur.
 
 ---
 
@@ -61,15 +58,13 @@ CRI-CORE exists to control that moment.
 
 CRI-CORE sits directly at the **execution boundary** — the point where a system attempts to act.
 
-It evaluates a proposed action and returns a single decision:
+It evaluates a run artifact representing a proposed state mutation and returns a single decision:
 
-- ✅ allow execution  
-- ❌ block execution  
+- allow execution  
+- block execution  
 
 No warnings.  
 No after-the-fact auditing.  
-
-**The action either happens — or it doesn’t.**
 
 ---
 
@@ -134,12 +129,17 @@ Proposals reference the governing contract using:
 
 contract.id  
 contract.version  
-contract.hash
+contract.hash  
 
 During enforcement the kernel verifies that the proposal's contract hash matches the compiled contract artifact used by the run.
 
-The kernel does not interpret governance policy structure directly.  
-It verifies deterministic contract identity only.
+The kernel does not interpret governance policy semantics.
+
+It verifies only deterministic contract identity and structural alignment between proposal and compiled contract artifacts.
+
+run_context supplies execution-time identity, integrity references, and publication context.
+
+It is treated as declarative input and is not resolved or validated against external systems.
 
 ---
 
@@ -151,8 +151,19 @@ It verifies deterministic contract identity only.
         →
     Governed state mutation
 
-The kernel ensures that only structurally valid and cryptographically
-sealed runs are permitted to mutate governed state.
+The kernel ensures that only structurally valid and cryptographically sealed runs are permitted to mutate governed state.
+
+---
+
+## Run Lifecycle
+
+CRI-CORE operates on sealed run artifacts:
+
+generate → finalize → evaluate → (optionally) commit
+
+Once finalized, a run is immutable.
+
+Any modification invalidates the seal and will cause enforcement failure.
 
 ---
 
