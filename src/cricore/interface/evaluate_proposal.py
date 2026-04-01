@@ -4,7 +4,7 @@ title: "CRI-CORE Proposal Evaluation Interface"
 filetype: "source"
 type: "execution-interface"
 domain: "integration"
-version: "0.1.2"
+version: "0.1.3"
 status: "Active"
 created: "2026-04-01"
 updated: "2026-04-01"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-Interface-evaluate_proposal-v0.1.2"
+  - "CRI-CORE-Interface-evaluate_proposal-v0.1.3"
 ---
 """
 
@@ -80,10 +80,25 @@ def evaluate_proposal(
     proposal["contract"]["hash"] = contract_hash
 
     # -----------------------------
-    # Minimal claim reference (required for ≥0.3.0)
+    # Claim artifact (minimal stub)
     # -----------------------------
 
-    claim_ref = f"claim-{run_id}"
+    claim_id = f"claim-{run_id}"
+    claims_dir = run_path / "claims"
+    claims_dir.mkdir(exist_ok=True)
+
+    claim_path = claims_dir / f"{claim_id}.json"
+
+    _write_json(
+        claim_path,
+        {
+            "claim_id": claim_id,
+            "created_utc": _utc_now_safe(),
+            "description": "Stub claim for interface evaluation",
+        },
+    )
+
+    claim_ref = f"claims/{claim_id}.json"
 
     # -----------------------------
     # Write run artifacts
