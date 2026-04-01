@@ -39,23 +39,25 @@ This project follows semantic versioning (0.x pre-stable).
 
 ## [0.11.0] - 2026-03-31
 
+## [0.11.0] - 2026-03-31
+
 ### Added
 - Public API surface via `cricore.evaluate`
 - `EvaluationResult` object:
   - `commit_allowed`
   - `failed_stages`
   - `summary`
-- Simplified evaluation interface for direct integration into external systems
+- Self-contained evaluation workflow for external integration
 
 ### Changed
-- Public usage pattern standardized around `evaluate()` instead of direct pipeline invocation
-- README updated to reflect canonical entrypoint and usage pattern
-- Internal pipeline remains fully deterministic and unchanged
+- Standardized public usage around `evaluate()` instead of direct pipeline invocation
+- README updated to reflect canonical entrypoint, execution model, and run lifecycle
+- Test strategy updated to generate and evaluate sealed run artifacts (no reuse of mutable fixtures)
 
 ### Notes
 - This release introduces the first stable usability layer over the CRI-CORE kernel.
-- No changes to enforcement semantics, stage ordering, or validation logic.
-- This is a surface-level improvement enabling easier adoption without altering kernel guarantees.
+- Enforcement semantics, stage ordering, and validation logic remain unchanged.
+- Aligns external usage with the kernel’s immutable, sealed-run execution model.
 
 ---
 
