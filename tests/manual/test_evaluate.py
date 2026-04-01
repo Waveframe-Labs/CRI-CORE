@@ -15,7 +15,7 @@ def write_json(path: Path, data: dict):
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-RUN_PATH = Path("tests/tmp_run")
+RUN_PATH = Path("tests/test-run")
 
 if RUN_PATH.exists():
     shutil.rmtree(RUN_PATH)
