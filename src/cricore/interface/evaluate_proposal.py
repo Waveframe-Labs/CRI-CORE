@@ -4,7 +4,7 @@ title: "CRI-CORE Proposal Evaluation Interface"
 filetype: "source"
 type: "execution-interface"
 domain: "integration"
-version: "0.1.1"
+version: "0.1.2"
 status: "Active"
 created: "2026-04-01"
 updated: "2026-04-01"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-Interface-evaluate_proposal-v0.1.1"
+  - "CRI-CORE-Interface-evaluate_proposal-v0.1.2"
 ---
 """
 
@@ -44,7 +44,6 @@ def _write_json(path: Path, data: Dict[str, Any]) -> None:
 
 
 def _utc_now_safe() -> str:
-    # Windows-safe timestamp (no colons)
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
@@ -81,6 +80,12 @@ def evaluate_proposal(
     proposal["contract"]["hash"] = contract_hash
 
     # -----------------------------
+    # Minimal claim reference (required for ≥0.3.0)
+    # -----------------------------
+
+    claim_ref = f"claim-{run_id}"
+
+    # -----------------------------
     # Write run artifacts
     # -----------------------------
 
@@ -91,6 +96,7 @@ def evaluate_proposal(
             "contract_id": policy.get("contract_id"),
             "contract_version": policy.get("contract_version"),
             "contract_hash": contract_hash,
+            "claim_ref": claim_ref,
             "created_utc": _utc_now_safe(),
         },
     )
