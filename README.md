@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.11.0"
+version: "0.12.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-31"
+updated: "2026-04-01"
 
 author:
   name: "Shawn C. Wright"
@@ -29,28 +29,31 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.11.0"
+  - "CRI-CORE v0.12.0"
   - "Deterministic Enforcement Kernel"
+  - "Execution Boundary Enforcement"
 ---
 # CRI-CORE
 
-**CRI-CORE v0.11.0 — Deterministic Enforcement Kernel**
+**CRI-CORE v0.12.0 — Deterministic Enforcement Kernel**
 
 **Concept DOI:** https://doi.org/10.5281/zenodo.19080238
 
-CRI-CORE is a deterministic structural enforcement engine for governed state transitions.
+CRI-CORE is a deterministic enforcement kernel that controls whether system actions are allowed to execute.
 
-It evaluates a run directory against explicit structural, authority, integrity, binding, seal, and publication constraints.
+It operates at the execution boundary — the exact point where a system attempts to mutate state.
 
-The kernel does not interpret meaning.
+Instead of detecting or auditing issues after execution, CRI-CORE determines:
 
-It evaluates structure and invariants only.
+- whether an action is allowed to occur  
+- or whether it is prevented entirely  
 
-CRI-CORE is a deterministic execution gate for state mutations in AI-assisted and automated systems.
+The kernel evaluates structural, authority, integrity, binding, and publication constraints over a sealed run artifact.
 
-Most systems detect or log issues after execution.
+It does not interpret meaning.  
+It evaluates deterministic structure and invariants only.
 
-CRI-CORE enforces a decision boundary before a state mutation is allowed to occur.
+This makes CRI-CORE a control point, not a validation layer.
 
 ---
 
@@ -66,6 +69,8 @@ It evaluates a run artifact representing a proposed state mutation and returns a
 No warnings.  
 No after-the-fact auditing.  
 
+Execution either happens — or it does not.
+
 ---
 
 ## Installation
@@ -80,11 +85,31 @@ Requires Python 3.10+.
 
 ## Minimal Usage
 
-The supported public entrypoint is:
+CRI-CORE is typically integrated as an execution gate.
 
-    from cricore import evaluate
+    from cricore.interface.governed_execute import governed_execute
 
-Example:
+    def execute_fn(proposal):
+        return perform_mutation(proposal)
+
+    result = governed_execute(
+        proposal=proposal,
+        policy=policy,
+        execute_fn=execute_fn,
+    )
+
+    if result["commit_allowed"]:
+        # execution occurred inside governed path
+        pass
+    else:
+        # execution prevented
+        handle_block(result["summary"])
+
+---
+
+### Kernel-Level API
+
+The kernel API is also available directly:
 
     from cricore import evaluate
 
@@ -97,18 +122,11 @@ Example:
         },
     )
 
-The function returns an `EvaluationResult`:
+Returns:
 
     result.commit_allowed   # bool
     result.failed_stages    # List[str]
     result.summary          # str
-
-Typical usage:
-
-    if result.commit_allowed:
-        execute()
-    else:
-        block(result.summary)
 
 ---
 
@@ -147,7 +165,7 @@ It is treated as declarative input and is not resolved or validated against exte
 
     Exploration (high velocity, non-deterministic)
         →
-    Deterministic structural gate (CRI-CORE)
+    Deterministic enforcement gate (CRI-CORE)
         →
     Governed state mutation
 
@@ -167,7 +185,7 @@ Any modification invalidates the seal and will cause enforcement failure.
 
 ---
 
-## Enforcement Pipeline (v0.11.0)
+## Enforcement Pipeline (v0.12.0)
 
 Canonical stage order:
 
@@ -200,6 +218,7 @@ For `contract_version ≥ 0.3.0`:
 
 - binding.json required  
 - SEAL.json required  
+- claim_ref required  
 - Strict cryptographic seal validation  
 - Immutable artifact boundary enforcement  
 
@@ -253,10 +272,7 @@ It emits a deterministic authorization decision:
 
     commit_allowed = publication_commit_stage.passed
 
-The caller decides whether to mutate.
-
-The kernel centralizes the commit decision.  
-It does not enforce it outside its invocation boundary.
+The caller is expected to route execution through this decision.
 
 ---
 
@@ -283,7 +299,7 @@ CRI-CORE does not:
 - Perform distributed consensus
 - Prevent bypass outside invocation
 
-It is a deterministic structural gate only.
+It is a deterministic structural enforcement gate only.
 
 ---
 
@@ -312,7 +328,7 @@ It provides:
 
 - Structural admissibility validation
 - Cryptographic immutability guarantees
-- Centralized commit authorization
+- Centralized execution authorization
 
 It is domain-agnostic.
 
