@@ -3,10 +3,10 @@ title: "CRI-CORE Enforcement Contract"
 filetype: "documentation"
 type: "specification"
 domain: "enforcement"
-version: "0.6.0"
+version: "0.12.0"
 status: "Active"
 created: "2026-02-27"
-updated: "2026-03-11"
+updated: "2026-04-01"
 license: "Apache-2.0"
 
 author:
@@ -21,194 +21,292 @@ maintainer:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.6.0"
+  - "CRI-CORE-ENFORCEMENT-CONTRACT-v0.12.0"
+  - "Execution Boundary Enforcement Contract"
 ---
 
-# CRI-CORE Enforcement Contract (v0.6.0)
+# CRI-CORE Enforcement Contract (v0.12.0)
 
 ## 1. Scope
 
-CRI-CORE is a deterministic enforcement engine that validates structural and cryptographic invariants for governed run artifacts.
+CRI-CORE is a deterministic enforcement kernel that determines whether a proposed state mutation is allowed to execute.
 
-It enforces:
+It operates at the execution boundary.
 
-- Run structure requirements
-- Contract version gating
-- Identity independence and role separation
-- Cryptographic integrity
-- Binding invariants
-- Repository publication gating
+The kernel evaluates structural, authority, integrity, binding, and publication constraints over a run artifact and produces a single outcome:
 
-It does not interpret claim content, evaluate correctness, or enforce domain semantics.
+- execution allowed  
+- execution blocked  
 
-It does not enforce lifecycle conformity as part of the canonical kernel runtime.
+CRI-CORE enforces:
 
-Passing CRI-CORE indicates structural compliance only.
+- Run structure requirements  
+- Contract version gating  
+- Contract identity binding  
+- Identity independence and role separation  
+- Cryptographic integrity and finalization  
+- Publication gating  
+- Commit authorization  
 
----
+CRI-CORE does not:
 
-## 2. Canonical Enforcement Pipeline
+- Interpret claim content  
+- Evaluate correctness or truth  
+- Enforce domain semantics  
+- Resolve external system state  
+- Perform lifecycle orchestration  
 
-The pipeline executes in the following normative order:
+Passing CRI-CORE indicates that execution is structurally admissible.
 
-1. run-structure
-2. structure-contract-version-gate
-3. structure-contract-hash-gate
-4. independence
-5. integrity
-6. integrity-finalization
-7. publication
-8. publication-commit
-
-The canonical stages are emitted in deterministic order.
-
-`publication-commit` defines `commit_allowed`.
+Failing CRI-CORE prevents execution.
 
 ---
 
-## 3. Contract Binding Enforcement
+## 2. Enforcement Model
 
-CRI-CORE enforces deterministic binding between mutation proposals and the compiled governance contract used during evaluation.
+CRI-CORE is not a validation layer.
+
+It is an execution control mechanism.
+
+The kernel does not produce advisory output.
+
+It produces a deterministic authorization decision:
+
+```
+
+commit_allowed ∈ {true, false}
+
+```
+
+If `commit_allowed = false`, the mutation MUST NOT execute.
+
+The kernel does not enforce execution externally.
+
+It defines the boundary at which execution is permitted or denied.
+
+---
+
+## 3. Canonical Enforcement Pipeline
+
+The pipeline executes in the following deterministic order:
+
+1. run-structure  
+2. structure-contract-version-gate  
+3. structure-contract-hash-gate  
+4. independence  
+5. integrity  
+6. integrity-finalization  
+7. publication  
+8. publication-commit  
+
+The stage order is fixed.
+
+`publication-commit` defines the execution decision:
+
+```
+
+commit_allowed = publication_commit_stage.passed
+
+```
+
+No subsequent stage may override this decision.
+
+---
+
+## 4. Contract Binding Enforcement
+
+CRI-CORE enforces deterministic binding between a mutation proposal and the compiled governance contract used during enforcement.
 
 A proposal MUST reference the governing contract using:
 
 ```
+
 contract.id
 contract.version
 contract.hash
-```
-
-During enforcement the kernel verifies that:
 
 ```
+
+During enforcement:
+
+```
+
 proposal.contract.hash == compiled_contract.contract_hash
+
 ```
 
-If the hashes differ, enforcement fails and the run is rejected.
+If this condition fails:
 
-This mechanism ensures that mutation proposals are cryptographically bound to the exact compiled governance contract used by the enforcement runtime.
+- the run is rejected  
+- execution is blocked  
 
-The kernel does not interpret governance policy structure directly.
-It verifies the identity of the compiled contract artifact used during evaluation.
+This ensures that a proposal cannot be evaluated under a different contract than the one it was created against.
+
+The kernel verifies contract identity only.
+
+It does not interpret governance policy structure.
 
 ---
 
-## 4. Run Artifact Contract
+## 5. Run Artifact Contract
 
-### 4.1 Required Before Finalization
+### 5.1 Required Before Finalization
 
 A valid run directory MUST contain:
 
-- `contract.json`
-- `report.md`
-- `randomness.json`
-- `approval.json`
-- `validation/` (machine validation outputs)
+- `contract.json`  
+- `report.md`  
+- `randomness.json`  
+- `approval.json`  
+- `validation/`  
 
-### 4.2 Required After Finalization
+These artifacts define the proposed mutation context prior to sealing.
+
+---
+
+### 5.2 Required After Finalization
 
 Finalization MUST produce:
 
-- `SHA256SUMS.txt`
-- `payload.tar.gz`
+- `SHA256SUMS.txt`  
+- `payload.tar.gz`  
 
 If `contract_version >= 0.3.0`, finalization MUST also produce:
 
-- `binding.json`
-- `SEAL.json`
+- `binding.json`  
+- `SEAL.json`  
+
+A finalized run is immutable.
+
+Any modification invalidates enforcement.
 
 ---
 
-## 5. Independence Enforcement
+## 6. Independence Enforcement
 
 If `required_roles` is declared:
 
-- `identities` MUST be present.
-- Each required role MUST be satisfied.
-- No identity may hold more than one required role.
+- `identities` MUST be present  
+- Each required role MUST be satisfied  
+- No identity may satisfy more than one required role  
 
-If identities are missing → FAIL.  
-If required_roles is absent → structural pass.
+Violations result in:
 
-Independence enforcement is structural only.
+- enforcement failure  
+- execution blocked  
+
+If `required_roles` is absent:
+
+- independence passes structurally  
+
+Independence is enforced at the level of identity structure only.
 
 ---
 
-## 6. Integrity Enforcement
+## 7. Integrity Enforcement
 
-### 6.1 Integrity Stage (Non-Mutating)
+### 7.1 Integrity Stage (Non-Mutating)
 
 The integrity stage:
 
-- Validates integrity section presence in run context.
-- Verifies `SHA256SUMS.txt` when present.
-- Performs no writes.
-
-### 6.2 Integrity-Finalization Stage (Mutating)
-
-Finalization writes:
-
-- `payload.tar.gz`
-- `SHA256SUMS.txt`
-- `binding.json` (>=0.3.0)
-- `SEAL.json` (>=0.3.0)
-
-Finalization MUST NOT execute if prior stages failed.
+- Verifies presence of integrity context  
+- Validates `SHA256SUMS.txt` if present  
+- Performs no writes  
 
 ---
 
-## 7. Binding Invariant (>= 0.3.0)
+### 7.2 Integrity-Finalization Stage (Mutating)
+
+Finalization produces:
+
+- `payload.tar.gz`  
+- `SHA256SUMS.txt`  
+- `binding.json` (>= 0.3.0)  
+- `SEAL.json` (>= 0.3.0)  
+
+Finalization MUST NOT execute if any prior stage has failed.
+
+---
+
+## 8. Binding Invariant (>= 0.3.0)
 
 `binding.json` MUST:
 
-- Hash `contract.json`
-- Hash the artifact declared via `claim_ref`
-- Hash `approval.json` (if present)
-- Produce deterministic `binding_hash`
+- Hash `contract.json`  
+- Hash the artifact declared via `claim_ref`  
+- Hash `approval.json` (if present)  
+- Produce deterministic `binding_hash`  
 
-Binding is structural and cryptographic only.
+If `claim_ref` is declared:
+
+- the referenced artifact MUST exist  
+- its hash MUST be included  
+
+Binding failure results in execution being blocked.
 
 ---
 
-## 8. Seal Invariant (>= 0.3.0)
+## 9. Seal Invariant (>= 0.3.0)
 
 `SEAL.json` MUST:
 
-- Hash all files recursively under the run directory
-- Exclude `SEAL.json`, `payload.tar.gz`, and `SHA256SUMS.txt` from file recursion
-- Include `sha256sums_hash` and `payload_hash` when present
-- Produce deterministic `seal_hash`
+- Hash all files recursively under the run directory  
+- Exclude:
+  - `SEAL.json`  
+  - `payload.tar.gz`  
+  - `SHA256SUMS.txt`  
 
-The seal provides tamper-evidence for the full run surface.
+- Include:
+  - `sha256sums_hash`  
+  - `payload_hash`  
 
----
+- Produce deterministic `seal_hash`  
 
-## 9. Failure Semantics
+Any mismatch invalidates the run and blocks execution.
 
-Enforcement fails if:
-
-- Required artifacts are missing
-- Integrity verification fails
-- Independence rules are violated
-- Binding mismatch occurs
-- Seal mismatch occurs
-- Stage ordering is violated
-
-Failure blocks `publication-commit`.
+The seal provides tamper evidence over the entire run surface.
 
 ---
 
-## 10. Versioning
+## 10. Failure Semantics
+
+Enforcement fails if any stage fails.
+
+Failure conditions include:
+
+- Missing required artifacts  
+- Contract binding mismatch  
+- Independence violations  
+- Integrity verification failure  
+- Binding invariant violation  
+- Seal invariant violation  
+- Stage ordering violation  
+
+If enforcement fails:
+
+```
+
+commit_allowed = false
+
+```
+
+Execution MUST NOT occur.
+
+---
+
+## 11. Versioning
 
 This contract follows semantic versioning:
 
-- MAJOR — Breaking enforcement changes
-- MINOR — Backward-compatible enforcement additions
-- PATCH — Editorial or diagnostic updates
+- MAJOR — Breaking enforcement behavior  
+- MINOR — Backward-compatible enforcement additions  
+- PATCH — Editorial or diagnostic updates  
 
-Historical runs MUST be interpreted under their declared `contract_version`.
+Each run is evaluated under its declared `contract_version`.
 
-Silent enforcement changes are prohibited.
+Enforcement behavior is version-isolated.
+
+Silent changes to enforcement semantics are prohibited.
 
 ---
 
