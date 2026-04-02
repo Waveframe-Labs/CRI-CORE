@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.11.0"
+version: "0.12.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-03-31"
+updated: "2026-04-01"
 
 author:
   name: "Shawn C. Wright"
@@ -27,7 +27,7 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.11.0"
+  - "CRI-CORE-CHANGELOG-v0.12.0"
 ---
 # Changelog
 
@@ -37,7 +37,35 @@ This project follows semantic versioning (0.x pre-stable).
 
 ---
 
-## [0.11.0] - 2026-03-31
+## [0.12.0] — 2026-04-01
+
+### Added
+- Introduced `governed_execute(...)` interface for enforced execution control
+- Added `evaluate_proposal(...)` to construct compliant run artifacts from external inputs
+- Established interface layer (`cricore.interface`) for system integration
+- Enabled execution gating via user-defined `execute_fn`
+
+### Changed
+- Shifted from evaluation-only usage to enforced execution at the mutation boundary
+- Standardized integration flow: proposal → interface → kernel → execution decision
+- Updated demo architecture to route execution through CRI-CORE
+
+### Fixed
+- Ensured Windows-compatible run IDs (removed invalid filesystem characters)
+- Added required `claim_ref` handling for contract_version ≥ 0.3.0
+- Created minimal claim artifact to satisfy binding requirements during integrity finalization
+
+### Notes
+This release introduces enforced execution behavior.
+
+Systems integrating CRI-CORE can now require that all actions pass deterministic admissibility checks before execution occurs.
+
+Execution is no longer advisory or post-hoc validated.  
+Actions are either allowed to execute or prevented entirely.
+
+This enables CRI-CORE to operate as a control point at the mutation boundary rather than a validation layer.
+
+---
 
 ## [0.11.0] - 2026-03-31
 
