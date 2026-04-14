@@ -6,3 +6,4 @@ __pycache__/
 /tests/tmp_run
 /tests/test-run
 /src/cricore/results/claim-lifecycle-demo
+/chroma_db
