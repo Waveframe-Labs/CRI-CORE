@@ -1,0 +1,16 @@
+{
+  "contract_version": "0.3.0",
+  "sha256sums_hash": "098916b045ca3da3e36ed9ddc99948ff8e029cb2ab3077a1e99f8022b7d167e7",
+  "payload_hash": "53980a0dea69a822c9b87d68fefb70eac31d785a0b6c62ab7b38fb271333e959",
+  "sealed_files": {
+    "approval.json": "61f5dafcba3b4e42cc164389e313e9ee2fba43565ab7de306db50105d5ba968f",
+    "binding.json": "424ae6f0babb4959f4517503176f5db8680f09ce9f4773f467792ee18d535807",
+    "claim.json": "493b26f44e8f994efd9b988362a4a8d1648f7c237f7faae3636d7188fa9641d9",
+    "compiled_contract.json": "a7c8a6d1cb58a50caf6f22e2fe2aecca63fc2263e1a43335c5b15dec1527fe80",
+    "contract.json": "7cb52f7bdf2ae6f48a31571de4dbebfafabc7a473da15fe9fb15a9650068dfcd",
+    "proposal.json": "ecfc9d515753f7fd787f45f1f1d557ba44f589ba3c3b1612181f6227f32eba8e",
+    "randomness.json": "92cb7f047bb75a8c9e5fc3e5cd2b6b798867d19e8dbfcd4bb4c9d9d159458a2d",
+    "report.md": "bd74a9fe7e3091e1032164bc697d6cefcbd8d149f08d9e3f0d45e42d895fe002"
+  },
+  "seal_hash": "faa0ab4f8c38f4c704d5f142c7a75334475093275bc6737664a6431ebc90310f"
+}

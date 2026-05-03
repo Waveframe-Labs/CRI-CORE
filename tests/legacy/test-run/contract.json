@@ -1,0 +1,8 @@
+{
+  "run_id": "test-run",
+  "contract_id": "test-contract",
+  "contract_version": "0.3.0",
+  "contract_hash": "dummy-hash",
+  "claim_ref": "claim.json",
+  "created_utc": "2026-05-03T03:35:33.768008Z"
+}

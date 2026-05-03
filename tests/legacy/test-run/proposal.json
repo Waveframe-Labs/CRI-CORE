@@ -1,0 +1,7 @@
+{
+  "contract": {
+    "id": "test-contract",
+    "version": "0.3.0",
+    "hash": "dummy-hash"
+  }
+}

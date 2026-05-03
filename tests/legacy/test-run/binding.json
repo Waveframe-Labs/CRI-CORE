@@ -1,0 +1,12 @@
+{
+  "contract_version": "0.3.0",
+  "contract_hash": "7cb52f7bdf2ae6f48a31571de4dbebfafabc7a473da15fe9fb15a9650068dfcd",
+  "claim_ref": "claim.json",
+  "claim_hash": "493b26f44e8f994efd9b988362a4a8d1648f7c237f7faae3636d7188fa9641d9",
+  "approval_hash": "61f5dafcba3b4e42cc164389e313e9ee2fba43565ab7de306db50105d5ba968f",
+  "declared_logs": {
+    "transitions/rejection-log.json": null,
+    "transitions/transition-log.json": null
+  },
+  "binding_hash": "23db26004681006313a801eed418800de6ea8ce77fb510e957a00adea247a2ea"
+}
