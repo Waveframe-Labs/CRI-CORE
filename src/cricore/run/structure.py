@@ -28,11 +28,9 @@ copyright:
 ai_assisted: "partial"
 
 dependencies:
-  - "./paths.py"
   - "../results/model.py"
   - "../results/stage.py"
   - "../errors.py"
-  - "../contract/loader.py"
 
 anchors:
   - "CRI-CORE-RunStructureValidator-v0.3.0"
@@ -42,107 +40,71 @@ anchors:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Optional
+from typing import Any, Mapping, Optional
 
-from .paths import required_directory_paths, required_file_paths
-from ..contract.loader import (
-    ContractDeclarationError,
-    extract_contract_version,
-    extract_created_utc,
-    extract_run_id,
-    load_contract_declaration,
-)
+from ..errors import FailureClass
 from ..results.model import ValidationResult
 from ..results.stage import StageResult
-from ..errors import FailureClass
 
 
 def validate_run_structure(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     expected_contract_version: Optional[str] = None,
 ) -> ValidationResult:
     """
-    Validate the structural conformity of a CRI-CORE run directory against the
-    CRI run artifact contract.
-
-    Enforcement surface:
-      - presence + placement of required files/directories
-      - contract.json existence + structural parse
-      - optional contract version gating (expected_contract_version)
-      - run_id binding between directory name and contract.json (structural equality)
-
-    Out of scope (by contract):
-      - integrity verification
-      - independence checks
-      - attestation verification
-      - publication/commit verification
+    Validate the structured CRI-CORE evaluation inputs.
     """
 
-    run_root = Path(run_path)
+    missing_paths: list[str] = []
+    invalid_paths: list[str] = []
+    contract_errors: list[str] = []
+    invariant_errors: list[str] = []
+    warnings: list[str] = []
 
-    missing_paths = []
-    invalid_paths = []
-    contract_errors = []
-    invariant_errors = []
-    warnings = []
+    declared_contract_version = compiled_contract.get("contract_version")
+    run_id = proposal.get("proposal_id")
 
-    run_id_from_path = run_root.name if run_root.exists() else None
+    if not isinstance(proposal, Mapping):
+        invariant_errors.append("proposal must be a mapping")
+    if not isinstance(compiled_contract, Mapping):
+        invariant_errors.append("compiled_contract must be a mapping")
 
-    declared_contract_version: Optional[str] = None
+    proposal_contract = proposal.get("contract")
+    if not isinstance(proposal_contract, Mapping):
+        contract_errors.append("proposal.contract missing or not a mapping")
+    else:
+        proposal_contract_id = proposal_contract.get("id")
+        proposal_contract_version = proposal_contract.get("version")
+        proposal_contract_hash = proposal_contract.get("hash")
 
-    # Root existence/type checks
-    if not run_root.exists():
-        missing_paths.append(str(run_root))
-    elif not run_root.is_dir():
-        invalid_paths.append(str(run_root))
+        if not isinstance(proposal_contract_id, str) or not proposal_contract_id.strip():
+            contract_errors.append("proposal.contract.id missing or invalid")
+        if not isinstance(proposal_contract_version, str) or not proposal_contract_version.strip():
+            contract_errors.append("proposal.contract.version missing or invalid")
+        if not isinstance(proposal_contract_hash, str) or not proposal_contract_hash.strip():
+            contract_errors.append("proposal.contract.hash missing or invalid")
 
-    # Only proceed with deeper checks if run_root is a directory
-    if run_root.exists() and run_root.is_dir():
-        # contract.json parsing and minimal field extraction
-        try:
-            contract_obj = load_contract_declaration(run_root)
+    compiled_contract_id = compiled_contract.get("contract_id")
+    compiled_contract_version = compiled_contract.get("contract_version")
+    compiled_contract_hash = compiled_contract.get("contract_hash")
 
-            declared_contract_version = extract_contract_version(contract_obj)
-            declared_run_id = extract_run_id(contract_obj)
-            declared_created_utc = extract_created_utc(contract_obj)
+    if not isinstance(compiled_contract_id, str) or not compiled_contract_id.strip():
+        contract_errors.append("compiled_contract.contract_id missing or invalid")
+    if not isinstance(compiled_contract_version, str) or not compiled_contract_version.strip():
+        contract_errors.append("compiled_contract.contract_version missing or invalid")
+    if not isinstance(compiled_contract_hash, str) or not compiled_contract_hash.strip():
+        contract_errors.append("compiled_contract.contract_hash missing or invalid")
 
-            if declared_contract_version is None:
-                contract_errors.append("contract_version missing or not a string in contract.json")
+    if isinstance(proposal_contract, Mapping):
+        if proposal_contract.get("id") != compiled_contract_id:
+            contract_errors.append("proposal contract id does not match compiled contract")
+        if proposal_contract.get("version") != compiled_contract_version:
+            contract_errors.append("proposal contract version does not match compiled contract")
 
-            if declared_run_id is None:
-                contract_errors.append("run_id missing or not a string in contract.json")
-            elif run_id_from_path is not None and declared_run_id != run_id_from_path:
-                contract_errors.append("run_id in contract.json does not match run directory name")
-
-            if declared_created_utc is None:
-                contract_errors.append("created_utc missing or not a string in contract.json")
-
-            # Optional version gate
-            if expected_contract_version is not None:
-                if declared_contract_version != expected_contract_version:
-                    contract_errors.append("Declared contract version does not match expected version")
-
-        except ContractDeclarationError as exc:
-            contract_errors.append(str(exc))
-
-        # Required file checks
-        for p in required_file_paths(
-            run_root,
-            contract_version=declared_contract_version,
-        ):
-            if not p.exists():
-                missing_paths.append(str(p))
-            elif not p.is_file():
-                invalid_paths.append(str(p))
-
-        # Required directory checks
-        for p in required_directory_paths(run_root):
-            if not p.exists():
-                missing_paths.append(str(p))
-            elif not p.is_dir():
-                invalid_paths.append(str(p))
+    if expected_contract_version is not None and compiled_contract_version != expected_contract_version:
+        contract_errors.append("Declared contract version does not match expected version")
 
     passed = (
         not missing_paths
@@ -152,9 +114,9 @@ def validate_run_structure(
     )
 
     return ValidationResult(
-        contract_version=declared_contract_version,
-        run_id=run_id_from_path,
-        run_path=str(run_root),
+        contract_version=declared_contract_version if isinstance(declared_contract_version, str) else None,
+        run_id=run_id if isinstance(run_id, str) else None,
+        run_path="",
         passed=passed,
         missing_paths=missing_paths,
         invalid_paths=invalid_paths,
@@ -167,18 +129,18 @@ def validate_run_structure(
 
 
 def run_structure_stage(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     expected_contract_version: Optional[str] = None,
 ) -> StageResult:
     """
-    Structural enforcement stage adapter for the CRI run artifact contract.
-
-    Stage ID: "run-structure"
+    Structural enforcement stage adapter for structured CRI-CORE inputs.
     """
 
     result = validate_run_structure(
-        run_path,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
         expected_contract_version=expected_contract_version,
     )
 
@@ -197,7 +159,6 @@ def run_structure_stage(
         failure_classes.append(FailureClass.INVARIANT_VIOLATION)
 
     messages = []
-
     messages.extend(result.missing_paths)
     messages.extend(result.invalid_paths)
     messages.extend(result.contract_errors)

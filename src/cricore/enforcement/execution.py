@@ -45,6 +45,7 @@ import json
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple
 
+from ..results.model import EvaluationResult
 from ..results.stage import StageResult
 from ..run.structure import run_structure_stage
 from .independence import run_independence_stage
@@ -90,13 +91,11 @@ def _make_version_gate_stage(
 
 
 def _make_contract_hash_gate_stage(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     version_gate_stage: StageResult,
 ) -> StageResult:
-    proposal_path = Path(run_path) / "proposal.json"
-    compiled_contract_path = Path(run_path) / "compiled_contract.json"
-
     if not version_gate_stage.passed:
         return StageResult(
             stage_id="structure-contract-hash-gate",
@@ -108,12 +107,6 @@ def _make_contract_hash_gate_stage(
         )
 
     try:
-        with proposal_path.open("r", encoding="utf-8") as f:
-            proposal = json.load(f)
-
-        with compiled_contract_path.open("r", encoding="utf-8") as f:
-            compiled_contract = json.load(f)
-
         proposal_hash = proposal["contract"]["hash"]
         compiled_contract_hash = compiled_contract["contract_hash"]
 
@@ -149,12 +142,13 @@ def _make_contract_hash_gate_stage(
         )
 
 
-def run_enforcement_pipeline(
-    run_path: str,
+def run_execution_pipeline(
     *,
-    expected_contract_version: Optional[str] = None,
-    run_context: Optional[Mapping[str, Any]] = None,
-) -> Tuple[List[StageResult], bool]:
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
+    run_context: Mapping[str, Any],
+    mode: str = "local",
+) -> EvaluationResult:
     """
     Execute the canonical CRI-CORE enforcement pipeline.
 
@@ -163,66 +157,126 @@ def run_enforcement_pipeline(
 
     commit_allowed is TRUE if and only if the publication-commit stage passes.
     """
+    effective_run_context = dict(run_context or {})
+    effective_run_context["mode"] = mode
 
-    results: List[StageResult] = []
+    stage_results: List[StageResult] = []
 
     # 1) Structure
     structure_res = run_structure_stage(
-        run_path,
-        expected_contract_version=expected_contract_version,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        expected_contract_version=None,
     )
-    results.append(structure_res)
+    stage_results.append(structure_res)
 
     # 2) Version gate
     version_gate_res = _make_version_gate_stage(
-        expected_contract_version=expected_contract_version,
+        expected_contract_version=None,
         structure_stage=structure_res,
     )
-    results.append(version_gate_res)
+    stage_results.append(version_gate_res)
 
     # 3) Contract hash gate
     hash_gate_res = _make_contract_hash_gate_stage(
-        run_path,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
         version_gate_stage=version_gate_res,
     )
-    results.append(hash_gate_res)
+    stage_results.append(hash_gate_res)
 
     # 4) Independence
     independence_res = run_independence_stage(
-        run_path,
-        run_context=run_context,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=effective_run_context,
     )
-    results.append(independence_res)
+    stage_results.append(independence_res)
 
     # 5) Integrity
     integrity_res = run_integrity_stage(
-        run_path,
-        run_context=run_context,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=effective_run_context,
     )
-    results.append(integrity_res)
+    stage_results.append(integrity_res)
 
     # 6) Integrity finalization
     finalization_res = run_integrity_finalization_stage(
-        run_path,
-        run_context=run_context,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=effective_run_context,
         prerequisite_passed=integrity_res.passed,
     )
-    results.append(finalization_res)
+    stage_results.append(finalization_res)
 
     # 7) Publication validation
     publication_res = run_publication_stage(
-        run_path,
-        run_context=run_context,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=effective_run_context,
     )
-    results.append(publication_res)
+    stage_results.append(publication_res)
 
     # 8) Publication commit
     commit_res = run_publication_commit_stage(
-        run_path,
-        prior_stage_results=results,
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        prior_stage_results=stage_results,
+        run_context=effective_run_context,
     )
-    results.append(commit_res)
+    stage_results.append(commit_res)
 
     commit_allowed = commit_res.passed
+    failed_stages = [
+        stage.stage_id
+        for stage in stage_results
+        if not stage.passed
+    ]
 
-    return results, commit_allowed
+    summary = (
+        "Commit allowed"
+        if commit_allowed
+        else f"Commit blocked due to failures in: {', '.join(failed_stages)}"
+    )
+
+    return EvaluationResult(
+        commit_allowed=commit_allowed,
+        failed_stages=failed_stages,
+        summary=summary,
+        stage_results=stage_results,
+    )
+
+
+def run_enforcement_pipeline(
+    run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
+    run_context: Optional[Mapping[str, Any]] = None,
+) -> Tuple[List[StageResult], bool]:
+    """
+    Backward-compatible run-path pipeline entrypoint.
+    """
+
+    proposal_path = Path(run_path) / "proposal.json"
+    compiled_contract_path = Path(run_path) / "compiled_contract.json"
+
+    with proposal_path.open("r", encoding="utf-8") as f:
+        proposal = json.load(f)
+
+    with compiled_contract_path.open("r", encoding="utf-8") as f:
+        compiled_contract = json.load(f)
+
+    if run_context is None:
+        run_context_path = Path(run_path) / "run_context.json"
+        if run_context_path.exists():
+            with run_context_path.open("r", encoding="utf-8") as f:
+                run_context = json.load(f)
+
+    result = run_execution_pipeline(
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=run_context or {},
+    )
+
+    return result.stage_results, result.commit_allowed

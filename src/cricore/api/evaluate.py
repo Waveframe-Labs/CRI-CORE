@@ -36,9 +36,9 @@ anchors:
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List
 
-from cricore.enforcement.execution import run_enforcement_pipeline
+from cricore.enforcement.execution import run_enforcement_pipeline, run_execution_pipeline
 from cricore.results.stage import StageResult
 
 
@@ -69,4 +69,25 @@ def evaluate(run_path: str, *, run_context: dict) -> EvaluationResult:
         failed_stages=failed_stages,
         summary=summary,
         stage_results=results,
+    )
+
+
+def evaluate_structured(
+    *,
+    proposal: Dict[str, Any],
+    compiled_contract: Dict[str, Any],
+    run_context: Dict[str, Any],
+    mode: str = "local",
+):
+    """
+    Structured evaluation entrypoint.
+
+    Evaluates a proposal directly without relying on filesystem-based run_path.
+    """
+
+    return run_execution_pipeline(
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=run_context,
+        mode=mode,
     )

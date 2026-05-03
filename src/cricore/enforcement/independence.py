@@ -1,43 +1,3 @@
-"""
----
-title: "CRI-CORE Independence Enforcement Stage"
-filetype: "operational"
-type: "specification"
-domain: "enforcement"
-version: "0.2.0"
-doi: "TBD-0.2.0"
-status: "Active"
-created: "2026-02-10"
-updated: "2026-02-26"
-
-author:
-  name: "Shawn C. Wright"
-  email: "swright@waveframelabs.org"
-  orcid: "https://orcid.org/0009-0006-6043-9295"
-
-maintainer:
-  name: "Waveframe Labs"
-  url: "https://waveframelabs.org"
-
-license: "Apache-2.0"
-
-copyright:
-  holder: "Waveframe Labs"
-  year: "2026"
-
-ai_assisted: "partial"
-ai_assistance_details: "AI-assisted refactor to replace the single orchestrator/reviewer independence model with a domain-agnostic multi-role structural independence model based on actors[], required_roles[], and conflict_flags, without introducing semantic coupling."
-
-dependencies:
-  - "../results/stage.py"
-  - "../errors.py"
-  - "../../docs/RUN_CONTEXT_CONTRACT.md"
-
-anchors:
-  - "CRI-CORE-IndependenceStage-v0.2.0"
----
-"""
-
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -68,8 +28,9 @@ def _extract_role(actor: Mapping[str, Any]) -> Optional[str]:
 
 
 def run_independence_stage(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,
 ) -> StageResult:
     """

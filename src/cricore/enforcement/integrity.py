@@ -42,143 +42,15 @@ anchors:
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from ..errors import FailureClass
-from ..integrity.binding import compute_binding_obj
-from ..integrity.finalize import finalize_run_integrity
-from ..integrity.seal import compute_seal_obj
 from ..results.stage import StageResult
 
 
-# ---------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------
-
-
-def _compute_sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def _load_manifest(sha_path: Path) -> dict[str, str]:
-    if not sha_path.exists():
-        raise FileNotFoundError("SHA256SUMS.txt missing")
-
-    manifest: dict[str, str] = {}
-
-    for line in sha_path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        parts = line.split()
-        if len(parts) < 2:
-            continue
-
-        digest = parts[0]
-        rel_path = parts[-1]
-        manifest[rel_path] = digest
-
-    return manifest
-
-
-def _load_contract_version(run_root: Path) -> Optional[str]:
-    contract_path = run_root / "contract.json"
-    if not contract_path.exists():
-        return None
-    try:
-        obj = json.loads(contract_path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-    cv = obj.get("contract_version")
-    return cv if isinstance(cv, str) else None
-
-
-def _version_tuple(v: str) -> tuple[int, int, int]:
-    parts = v.split(".")
-    if len(parts) != 3:
-        raise ValueError(f"invalid contract_version (expected X.Y.Z): {v}")
-    return (int(parts[0]), int(parts[1]), int(parts[2]))
-
-
-def _contract_at_least(contract_version: str, minimum: str) -> bool:
-    return _version_tuple(contract_version) >= _version_tuple(minimum)
-
-
-def _verify_binding_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
-    """
-    Verify binding.json without mutating the run directory.
-    """
-    binding_path = run_root / "binding.json"
-    if not binding_path.exists():
-        return False, ["binding.json missing"]
-
-    try:
-        stored = json.loads(binding_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        return False, [f"binding.json invalid JSON: {exc}"]
-
-    stored_hash = stored.get("binding_hash")
-    if not isinstance(stored_hash, str) or not stored_hash:
-        return False, ["binding.json missing binding_hash"]
-
-    try:
-        expected = compute_binding_obj(run_root)
-    except Exception as exc:
-        return False, [f"binding recomputation failed: {exc}"]
-
-    expected_hash = expected.get("binding_hash")
-    if not isinstance(expected_hash, str) or not expected_hash:
-        return False, ["recomputed binding missing binding_hash"]
-
-    if expected_hash != stored_hash:
-        return False, ["binding mismatch: binding_hash does not match recomputed value"]
-
-    for k in ("contract_version", "contract_hash", "claim_ref", "claim_hash", "approval_hash"):
-        if k in stored and stored.get(k) != expected.get(k):
-            return False, [f"binding mismatch: {k} does not match recomputed value"]
-
-    return True, []
-
-
-def _verify_seal_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
-    """
-    Verify SEAL.json without mutating the run directory.
-    """
-    seal_path = run_root / "SEAL.json"
-    if not seal_path.exists():
-        return False, ["SEAL.json missing"]
-
-    try:
-        stored = json.loads(seal_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        return False, [f"SEAL.json invalid JSON: {exc}"]
-
-    stored_hash = stored.get("seal_hash")
-    if not isinstance(stored_hash, str) or not stored_hash:
-        return False, ["SEAL.json missing seal_hash"]
-
-    try:
-        expected = compute_seal_obj(run_root)
-    except Exception as exc:
-        return False, [f"seal recomputation failed: {exc}"]
-
-    expected_hash = expected.get("seal_hash")
-    if not isinstance(expected_hash, str) or not expected_hash:
-        return False, ["recomputed seal missing seal_hash"]
-
-    if expected_hash != stored_hash:
-        return False, ["seal mismatch: seal_hash does not match recomputed value"]
-
-    return True, []
+def _is_local_mode(run_context: Optional[Mapping[str, Any]]) -> bool:
+    return isinstance(run_context, Mapping) and run_context.get("mode") == "local"
 
 
 # ---------------------------------------------------------------------
@@ -187,10 +59,10 @@ def _verify_seal_non_mutating(run_root: Path) -> tuple[bool, list[str]]:
 
 
 def run_integrity_stage(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,
-    finalize: bool = False,  # backward compatibility only; canonical pipeline uses finalization stage
 ) -> StageResult:
     """
     Structural + cryptographic integrity verification.
@@ -205,11 +77,10 @@ def run_integrity_stage(
     messages: list[str] = []
     failure_classes: list[FailureClass] = []
 
-    run_root = Path(run_path).resolve()
-
     # --- Structural run_context validation ---
 
     integrity = None
+    local_mode = _is_local_mode(run_context)
 
     if not run_context or not isinstance(run_context, Mapping):
         messages.append("run_context is missing or not a mapping")
@@ -219,7 +90,8 @@ def run_integrity_stage(
 
     if not isinstance(integrity, Mapping):
         messages.append("integrity section missing from run_context")
-        failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
+        if not local_mode:
+            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
     else:
         for key in ("workflow_execution_ref", "run_payload_ref", "attestation_ref"):
             value = integrity.get(key)
@@ -227,58 +99,6 @@ def run_integrity_stage(
                 messages.append(f"integrity.{key} must be a string when present")
 
         if any(m.startswith("integrity.") for m in messages):
-            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-
-    # --- SHA256SUMS verification ---
-
-    sha_path = run_root / "SHA256SUMS.txt"
-
-    if sha_path.exists():
-        try:
-            manifest = _load_manifest(sha_path)
-        except Exception as exc:
-            messages.append(f"integrity manifest load failed: {exc}")
-            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-            manifest = {}
-
-        for rel_path, expected_digest in manifest.items():
-            target = run_root / rel_path
-
-            if not target.exists():
-                messages.append(f"manifest references missing file: {rel_path}")
-                failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-                continue
-
-            actual_digest = _compute_sha256(target)
-            if actual_digest != expected_digest:
-                messages.append(f"hash mismatch: {rel_path}")
-                failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-
-    # --- Version-gated binding + seal enforcement ---
-
-    contract_version = _load_contract_version(run_root)
-    if contract_version is not None:
-        try:
-            if _contract_at_least(contract_version, "0.3.0"):
-                ok_b, b_msgs = _verify_binding_non_mutating(run_root)
-                if not ok_b:
-                    messages.extend(b_msgs)
-                    failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-
-                ok_s, s_msgs = _verify_seal_non_mutating(run_root)
-                if not ok_s:
-                    messages.extend(s_msgs)
-                    failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-        except Exception as exc:
-            messages.append(f"binding/seal verification error: {exc}")
-            failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
-
-    # Backward-compatible finalization hook (avoid in canonical pipeline)
-    if finalize and not failure_classes:
-        try:
-            finalize_run_integrity(run_root)
-        except Exception as exc:
-            messages.append(f"finalization failed: {exc}")
             failure_classes.append(FailureClass.INTEGRITY_CHECK_FAILED)
 
     passed = not failure_classes
@@ -299,13 +119,27 @@ def run_integrity_stage(
 
 
 def run_integrity_finalization_stage(
-    run_path: str,
     *,
+    proposal: Mapping[str, Any],
+    compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,  # accepted for interface symmetry
     prerequisite_passed: bool = True,
 ) -> StageResult:
+    mode = "local"
+    if isinstance(run_context, Mapping):
+        mode = run_context.get("mode", "local")
 
     if not prerequisite_passed:
+        if mode != "strict":
+            return StageResult(
+                stage_id="integrity-finalization",
+                passed=True,
+                failure_classes=[],
+                messages=["skipped: integrity incomplete (local mode)"],
+                checked_at_utc=datetime.now(timezone.utc).isoformat(),
+                engine_version=None,
+            )
+
         return StageResult(
             stage_id="integrity-finalization",
             passed=False,

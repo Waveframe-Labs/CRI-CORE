@@ -30,7 +30,6 @@ import json
 import tempfile
 from typing import Dict, Any, Optional
 
-from compiler.compile_policy import compile_policy
 from cricore import evaluate
 from cricore.integrity.finalize import finalize_run_integrity
 
@@ -53,7 +52,7 @@ def _utc_now_safe() -> str:
 
 def evaluate_proposal(
     proposal: Dict[str, Any],
-    policy: Dict[str, Any],
+    compiled_contract: Dict[str, Any],
     *,
     run_id: Optional[str] = None,
 ) -> Any:
@@ -68,10 +67,9 @@ def evaluate_proposal(
     (run_path / "validation").mkdir(exist_ok=True)
 
     # -----------------------------
-    # Compile contract
+    # Use precompiled contract
     # -----------------------------
 
-    compiled_contract = compile_policy(policy)
     contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
 
     if "contract" not in proposal:
@@ -108,8 +106,8 @@ def evaluate_proposal(
         run_path / "contract.json",
         {
             "run_id": run_id,
-            "contract_id": policy.get("contract_id"),
-            "contract_version": policy.get("contract_version"),
+            "contract_id": compiled_contract.get("contract_id"),
+            "contract_version": compiled_contract.get("contract_version"),
             "contract_hash": contract_hash,
             "claim_ref": claim_ref,
             "created_utc": _utc_now_safe(),
@@ -118,6 +116,10 @@ def evaluate_proposal(
 
     _write_json(run_path / "compiled_contract.json", compiled_contract)
     _write_json(run_path / "proposal.json", proposal)
+    _write_json(
+        run_path / "run_context.json",
+        proposal.get("run_context", {})
+    )
 
     (run_path / "report.md").write_text("# CRI-CORE Evaluation Run\n", encoding="utf-8")
 

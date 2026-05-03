@@ -41,6 +41,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from .stage import StageResult
+
 
 @dataclass
 class ValidationResult:
@@ -67,3 +69,11 @@ class ValidationResult:
 
     checked_at_utc: Optional[str] = None
     engine_version: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class EvaluationResult:
+    commit_allowed: bool
+    failed_stages: List[str]
+    summary: str
+    stage_results: List[StageResult]

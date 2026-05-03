@@ -50,6 +50,10 @@ def evaluate(
         run_path = Path(tmpdir)
 
         _write_json(run_path / "proposal.json", proposal)
+        _write_json(
+            run_path / "run_context.json",
+            proposal.get("run_context", {})
+        )
         _write_json(run_path / "compiled_contract.json", compiled_contract)
 
         contract_stub = {
@@ -75,6 +79,27 @@ def evaluate(
         )
 
         return results, commit_allowed
+
+
+def evaluate_structured(
+    *,
+    proposal: dict,
+    compiled_contract: dict,
+    run_context: dict,
+):
+    """
+    New structured evaluation entrypoint.
+
+    Bypasses filesystem-based run_path execution.
+    """
+
+    from cricore.enforcement.execution import run_execution_pipeline
+
+    return run_execution_pipeline(
+        proposal=proposal,
+        compiled_contract=compiled_contract,
+        run_context=run_context,
+    )
 
 
 def evaluate_run(run_path: str) -> bool:
