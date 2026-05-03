@@ -147,7 +147,8 @@ def run_execution_pipeline(
     proposal: Mapping[str, Any],
     compiled_contract: Mapping[str, Any],
     run_context: Mapping[str, Any],
-    mode: str = "local",
+    mode: Optional[str] = None,
+    expected_contract_version: Optional[str] = None,
 ) -> EvaluationResult:
     """
     Execute the canonical CRI-CORE enforcement pipeline.
@@ -158,7 +159,13 @@ def run_execution_pipeline(
     commit_allowed is TRUE if and only if the publication-commit stage passes.
     """
     effective_run_context = dict(run_context or {})
-    effective_run_context["mode"] = mode
+    if mode is not None:
+        effective_mode = mode
+    elif isinstance(run_context, dict) and "mode" in run_context:
+        effective_mode = run_context["mode"]
+    else:
+        effective_mode = "local"
+    effective_run_context["mode"] = effective_mode
 
     stage_results: List[StageResult] = []
 
@@ -166,13 +173,13 @@ def run_execution_pipeline(
     structure_res = run_structure_stage(
         proposal=proposal,
         compiled_contract=compiled_contract,
-        expected_contract_version=None,
+        expected_contract_version=expected_contract_version,
     )
     stage_results.append(structure_res)
 
     # 2) Version gate
     version_gate_res = _make_version_gate_stage(
-        expected_contract_version=None,
+        expected_contract_version=expected_contract_version,
         structure_stage=structure_res,
     )
     stage_results.append(version_gate_res)
@@ -277,6 +284,7 @@ def run_enforcement_pipeline(
         proposal=proposal,
         compiled_contract=compiled_contract,
         run_context=run_context or {},
+        expected_contract_version=expected_contract_version,
     )
 
     return result.stage_results, result.commit_allowed

@@ -38,12 +38,12 @@ anchors:
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from importlib.resources import files
 
 import jsonschema
 
 
-SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schema" / "proposal.schema.json"
+SCHEMA_RESOURCE = files("cricore.schema").joinpath("proposal.schema.json")
 
 
 class ProposalValidationError(RuntimeError):
@@ -51,7 +51,7 @@ class ProposalValidationError(RuntimeError):
 
 
 def _load_schema():
-    with SCHEMA_PATH.open(encoding="utf-8") as f:
+    with SCHEMA_RESOURCE.open(encoding="utf-8") as f:
         schema = json.load(f)
 
     Validator = jsonschema.validators.validator_for(schema)

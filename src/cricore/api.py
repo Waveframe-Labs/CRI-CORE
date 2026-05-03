@@ -30,7 +30,7 @@ anchors:
 import json
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict, Tuple, List, Optional
 
 from .enforcement.execution import run_enforcement_pipeline
 from .results.stage import StageResult
@@ -86,6 +86,8 @@ def evaluate_structured(
     proposal: dict,
     compiled_contract: dict,
     run_context: dict,
+    mode: Optional[str] = None,
+    expected_contract_version: Optional[str] = None,
 ):
     """
     New structured evaluation entrypoint.
@@ -99,10 +101,16 @@ def evaluate_structured(
         proposal=proposal,
         compiled_contract=compiled_contract,
         run_context=run_context,
+        mode=mode,
+        expected_contract_version=expected_contract_version,
     )
 
 
-def evaluate_run(run_path: str) -> bool:
+def evaluate_run(
+    run_path: str,
+    *,
+    expected_contract_version: Optional[str] = None,
+) -> bool:
     """
     Canonical enforcement entry point.
     """
@@ -110,6 +118,7 @@ def evaluate_run(run_path: str) -> bool:
     _, commit_allowed = run_enforcement_pipeline(
         run_path,
         run_context=_minimal_run_context(),
+        expected_contract_version=expected_contract_version,
     )
 
     return commit_allowed

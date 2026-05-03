@@ -70,12 +70,8 @@ def evaluate_proposal(
     # Use precompiled contract
     # -----------------------------
 
-    contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
-
     if "contract" not in proposal:
         raise ValueError("proposal must include 'contract' field")
-
-    proposal["contract"]["hash"] = contract_hash
 
     # -----------------------------
     # Claim artifact (minimal stub)
@@ -108,7 +104,7 @@ def evaluate_proposal(
             "run_id": run_id,
             "contract_id": compiled_contract.get("contract_id"),
             "contract_version": compiled_contract.get("contract_version"),
-            "contract_hash": contract_hash,
+            "contract_hash": compiled_contract.get("contract_hash", "MISSING_HASH"),
             "claim_ref": claim_ref,
             "created_utc": _utc_now_safe(),
         },

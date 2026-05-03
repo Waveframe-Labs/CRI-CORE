@@ -38,6 +38,7 @@ anchors:
 
 from __future__ import annotations
 
+import gzip
 import io
 import tarfile
 from pathlib import Path
@@ -79,9 +80,9 @@ def build_payload_archive_bytes(run_root: Path) -> bytes:
 
     run_root = run_root.resolve()
 
-    buffer = io.BytesIO()
+    tar_buffer = io.BytesIO()
 
-    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+    with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
         for p in _iter_files(run_root):
             rel = p.relative_to(run_root).as_posix()
 
@@ -97,4 +98,10 @@ def build_payload_archive_bytes(run_root: Path) -> bytes:
             with p.open("rb") as f:
                 tar.addfile(info, fileobj=f)
 
-    return buffer.getvalue()
+    tar_buffer.seek(0)
+
+    gzip_buffer = io.BytesIO()
+    with gzip.GzipFile(fileobj=gzip_buffer, mode="wb", mtime=0) as gz:
+        gz.write(tar_buffer.getvalue())
+
+    return gzip_buffer.getvalue()

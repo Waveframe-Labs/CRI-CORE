@@ -36,7 +36,7 @@ anchors:
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from cricore.enforcement.execution import run_enforcement_pipeline, run_execution_pipeline
 from cricore.results.stage import StageResult
@@ -50,10 +50,16 @@ class EvaluationResult:
     stage_results: List[StageResult]
 
 
-def evaluate(run_path: str, *, run_context: dict) -> EvaluationResult:
+def evaluate(
+    run_path: str,
+    *,
+    run_context: dict,
+    expected_contract_version: Optional[str] = None,
+) -> EvaluationResult:
     results, commit_allowed = run_enforcement_pipeline(
         run_path,
         run_context=run_context,
+        expected_contract_version=expected_contract_version,
     )
 
     failed_stages = [r.stage_id for r in results if not r.passed]
@@ -77,7 +83,8 @@ def evaluate_structured(
     proposal: Dict[str, Any],
     compiled_contract: Dict[str, Any],
     run_context: Dict[str, Any],
-    mode: str = "local",
+    mode: Optional[str] = None,
+    expected_contract_version: Optional[str] = None,
 ):
     """
     Structured evaluation entrypoint.
@@ -90,4 +97,5 @@ def evaluate_structured(
         compiled_contract=compiled_contract,
         run_context=run_context,
         mode=mode,
+        expected_contract_version=expected_contract_version,
     )

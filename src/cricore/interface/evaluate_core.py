@@ -20,8 +20,6 @@ def evaluate_core(
     if "contract" not in proposal:
         raise ValueError("proposal must include 'contract' field")
 
-    proposal["contract"]["hash"] = compiled_contract.get("contract_hash")
-
     # Call structured kernel entrypoint
     result = evaluate_structured(
         proposal=proposal,
