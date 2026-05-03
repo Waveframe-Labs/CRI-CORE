@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.12.0"
+version: "0.13.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-04-01"
+updated: "2026-05-03"
 
 author:
   name: "Shawn C. Wright"
@@ -27,13 +27,55 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.12.0"
+  - "CRI-CORE-CHANGELOG-v0.13.0"
 ---
 # Changelog
 
 All notable changes to CRI-CORE are documented here.
 
 This project follows semantic versioning (0.x pre-stable).
+
+---
+
+## v0.13.0 2026-05-03
+
+### Added
+- Structured in-memory evaluation pipeline via `evaluate_structured`
+- Regression test suite for execution boundary invariants
+- Deterministic payload generation (byte-stable archives)
+- Contract version enforcement (`expected_contract_version`)
+
+### Changed
+- Replaced filesystem-based (`run_path`) execution model with structured inputs:
+  - `compiled_contract`
+  - `proposal`
+  - `run_context`
+- Enforcement pipeline now operates fully in-memory
+- Execution mode precedence defined as:
+  - function argument > run_context["mode"] > "local"
+
+### Enforced (Boundary Invariants)
+- Contract hash immutability:
+  - proposal hash must match compiled contract hash
+- Proposal immutability:
+  - evaluation does not mutate caller input
+- Strict mode propagation:
+  - execution mode cannot be silently downgraded
+- Deterministic outputs:
+  - identical inputs produce identical results
+
+### Fixed
+- Contract hash overwrite vulnerability in interface layer
+- Execution mode downgrade bug
+- Schema loading path resolution (now uses `importlib.resources`)
+- Non-deterministic payload generation due to gzip timestamp
+
+### Deprecated
+- Filesystem-based execution (`run_path`)
+- Legacy test suite (now skipped)
+
+### Notes
+This release establishes the execution boundary model as the canonical interface for CRI-CORE.
 
 ---
 
