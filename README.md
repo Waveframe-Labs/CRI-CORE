@@ -34,6 +34,10 @@ anchors:
   - "Execution Boundary Enforcement"
 ---
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Waveframe-Labs/.github/main/assets/branding/canon_wf_logo_extended.png" width="700">
+</p>
+
 # CRI-CORE — Execution Boundary Enforcement Kernel
 
 CRI-CORE is a deterministic enforcement engine that decides whether an action is allowed to execute.
