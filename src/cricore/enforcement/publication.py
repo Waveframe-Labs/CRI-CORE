@@ -44,10 +44,8 @@ from typing import Any, Mapping, Optional, Sequence
 
 from ..errors import FailureClass
 from ..results.stage import StageResult
+from .mode import resolve_mode
 
-
-def _is_local_mode(run_context: Optional[Mapping[str, Any]]) -> bool:
-    return isinstance(run_context, Mapping) and run_context.get("mode") == "local"
 
 
 def run_publication_stage(
@@ -55,6 +53,7 @@ def run_publication_stage(
     proposal: Mapping[str, Any],
     compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,
+    mode: str = "strict",
 ) -> StageResult:
     """
     Publication context validation stage.
@@ -67,7 +66,7 @@ def run_publication_stage(
     failure_classes = []
 
     publication = None
-    local_mode = _is_local_mode(run_context)
+    local_mode = resolve_mode(mode, run_context) == "local"
 
     if not run_context or not isinstance(run_context, Mapping):
         messages.append("run_context missing or not a mapping")
@@ -107,6 +106,7 @@ def run_publication_commit_stage(
     compiled_contract: Mapping[str, Any],
     prior_stage_results: Sequence[StageResult],
     run_context: Optional[Mapping[str, Any]] = None,
+    mode: str = "strict",
 ) -> StageResult:
     """
     Atomic commit enforcement stage.
@@ -120,9 +120,7 @@ def run_publication_commit_stage(
 
     messages = []
     failure_classes = []
-    mode = "local"
-    if isinstance(run_context, Mapping):
-        mode = run_context.get("mode", "local")
+    mode = resolve_mode(mode, run_context)
 
     hard_failures = [
         stage for stage in prior_stage_results

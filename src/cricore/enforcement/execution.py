@@ -51,6 +51,7 @@ from ..run.structure import run_structure_stage
 from .independence import run_independence_stage
 from .integrity import run_integrity_stage, run_integrity_finalization_stage
 from .publication import run_publication_stage, run_publication_commit_stage
+from .mode import resolve_mode
 
 
 def _make_version_gate_stage(
@@ -147,24 +148,18 @@ def run_execution_pipeline(
     proposal: Mapping[str, Any],
     compiled_contract: Mapping[str, Any],
     run_context: Mapping[str, Any],
-    mode: Optional[str] = None,
+    mode: str = "strict",
     expected_contract_version: Optional[str] = None,
 ) -> EvaluationResult:
     """
     Execute the canonical CRI-CORE enforcement pipeline.
 
-    Returns:
-        (results, commit_allowed)
-
-    commit_allowed is TRUE if and only if the publication-commit stage passes.
+    Omitted mode enforces strictly. Explicit mode="local" is advisory only.
+    Invalid or conflicting modes raise ValueError before any policy stage.
+    Returns an EvaluationResult; commit_allowed reflects publication-commit.
     """
+    effective_mode = resolve_mode(mode, run_context)
     effective_run_context = dict(run_context or {})
-    if mode is not None:
-        effective_mode = mode
-    elif isinstance(run_context, dict) and "mode" in run_context:
-        effective_mode = run_context["mode"]
-    else:
-        effective_mode = "local"
     effective_run_context["mode"] = effective_mode
 
     stage_results: List[StageResult] = []
@@ -205,6 +200,7 @@ def run_execution_pipeline(
         proposal=proposal,
         compiled_contract=compiled_contract,
         run_context=effective_run_context,
+        mode=effective_mode,
     )
     stage_results.append(integrity_res)
 
@@ -213,6 +209,7 @@ def run_execution_pipeline(
         proposal=proposal,
         compiled_contract=compiled_contract,
         run_context=effective_run_context,
+        mode=effective_mode,
         prerequisite_passed=integrity_res.passed,
     )
     stage_results.append(finalization_res)
@@ -222,6 +219,7 @@ def run_execution_pipeline(
         proposal=proposal,
         compiled_contract=compiled_contract,
         run_context=effective_run_context,
+        mode=effective_mode,
     )
     stage_results.append(publication_res)
 
@@ -231,6 +229,7 @@ def run_execution_pipeline(
         compiled_contract=compiled_contract,
         prior_stage_results=stage_results,
         run_context=effective_run_context,
+        mode=effective_mode,
     )
     stage_results.append(commit_res)
 
@@ -260,11 +259,13 @@ def run_enforcement_pipeline(
     *,
     expected_contract_version: Optional[str] = None,
     run_context: Optional[Mapping[str, Any]] = None,
+    mode: str = "strict",
 ) -> Tuple[List[StageResult], bool]:
     """
-    Backward-compatible run-path pipeline entrypoint.
+    Run-path entrypoint with the same strict-default mode contract.
     """
 
+    resolve_mode(mode, run_context)
     proposal_path = Path(run_path) / "proposal.json"
     compiled_contract_path = Path(run_path) / "compiled_contract.json"
 
@@ -283,7 +284,8 @@ def run_enforcement_pipeline(
     result = run_execution_pipeline(
         proposal=proposal,
         compiled_contract=compiled_contract,
-        run_context=run_context or {},
+        run_context=run_context if run_context is not None else {},
+        mode=mode,
         expected_contract_version=expected_contract_version,
     )
 

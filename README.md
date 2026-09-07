@@ -77,13 +77,16 @@ If `commit_allowed` is `False`, the action must not execute.
 
 ## Usage
 
+The canonical call enforces strictly when mode is omitted. Supply the integrity
+and publication context required by the existing policy stages.
+
 ```python
 from cricore.api import evaluate_structured
 
 result = evaluate_structured(
     proposal=proposal,
     compiled_contract=compiled_contract,
-    run_context=run_context
+    run_context=run_context,
 )
 
 if result.commit_allowed:
@@ -133,17 +136,23 @@ All decisions are based on the caller’s original input.
 
 ### 3. Explicit Execution Mode
 
-Execution mode is never silently downgraded.
+Omitting the function's `mode` selects `"strict"`. The only supported values are
+exactly `"strict"` and `"local"`. `None`, other types, unknown strings, empty
+strings, case aliases, and whitespace variants raise `ValueError` with the stable
+`CRI_MODE_INVALID` diagnostic. Values are never normalized.
 
-```
-function argument > run_context["mode"] > "local"
-```
+If `run_context["mode"]` is present, it must match the function mode exactly
+(including the default `"strict"`). A mismatch raises `ValueError` with
+`CRI_MODE_CONFLICT` before any policy stage runs. Remove the context declaration
+or make both declarations identical. Context alone cannot select local mode.
+A configuration exception must block execution.
 
 ---
 
 ### 4. Deterministic Outputs
 
-Identical inputs produce identical results.
+Identical inputs produce identical decisions and policy stage traces.
+Stage `checked_at_utc` fields record observation time and may differ.
 
 Payload generation is byte-stable across runs.
 
@@ -159,17 +168,51 @@ No hidden logic.
 
 ## Execution Modes
 
-### Local (default)
+### Strict (default enforcement)
 
-* advisory enforcement
-* missing integrity/publication does not block
-* emits warnings
+* all existing required conditions must pass
+* absent integrity or publication context blocks the commit decision
+* no soft failures authorize execution
 
-### Strict
+This selects the existing strict policy checks; it does not add evidence
+validation or change what those checks consider sufficient.
 
-* full enforcement
-* all required conditions must pass
-* no soft failures
+### Local (explicit advisory evaluation)
+
+```python
+result = evaluate_structured(
+    proposal=proposal,
+    compiled_contract=compiled_contract,
+    run_context=run_context,
+    mode="local",
+)
+# Inspect advisory diagnostics only. Never use this result to execute a mutation.
+```
+
+Local evaluation retains the existing advisory behavior: missing integrity or
+publication context produces messages without blocking, and those stages' soft
+failures do not block the advisory decision. **Advisory results must never
+authorize a mutation**, even when `commit_allowed` is `True`. If the context
+includes a mode, it must also be `"local"` for this call.
+
+### Migration (recommended CRI-CORE 0.14.0)
+
+Callers that omitted mode now receive strict enforcement. Provide the required
+context and handle blocked decisions or configuration exceptions before execution.
+Callers that previously selected advisory behavior with only
+`run_context["mode"] = "local"` must explicitly pass `mode="local"` for advisory
+use, or remove/change the context mode for strict enforcement. Passing `None`
+is no longer equivalent to omission.
+
+The same contract applies to `cricore.api.evaluate`, `run_execution_pipeline`,
+`run_enforcement_pipeline`, root exports, the retained `evaluate_core` and
+`evaluate_proposal` wrappers, and directly imported mode-sensitive stage helpers.
+`governed_execute` always uses strict evaluation; it has no advisory execution opt-in.
+The canonical API implementation is the `cricore.api` package; the shadowed
+`src/cricore/api.py` implementation has been removed.
+
+This compatibility change is recommended for **0.14.0**. Version metadata remains
+unchanged in this PR; coordinated releases are separate work.
 
 ---
 

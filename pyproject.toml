@@ -45,7 +45,9 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
     "pytest>=7",
-    "jsonschema>=4"
+    "jsonschema>=4",
+    "cricore-contract-compiler==0.4.0",
+    "cricore-proposal-normalizer==0.2.0"
 ]
 
 [project.urls]

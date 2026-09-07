@@ -31,6 +31,7 @@ import tempfile
 from typing import Dict, Any, Optional
 
 from cricore import evaluate
+from cricore.enforcement.mode import resolve_mode
 from cricore.integrity.finalize import finalize_run_integrity
 
 
@@ -55,7 +56,10 @@ def evaluate_proposal(
     compiled_contract: Dict[str, Any],
     *,
     run_id: Optional[str] = None,
+    mode: str = "strict",
 ) -> Any:
+    """Evaluate strictly by default; explicit local results are advisory only."""
+    resolve_mode(mode, proposal.get("run_context", {}))
 
     if run_id is None:
         run_id = f"run-{_utc_now_safe()}"
@@ -147,6 +151,7 @@ def evaluate_proposal(
     result = evaluate(
         run_path=str(run_path),
         run_context=proposal.get("run_context", {}),
+        mode=mode,
     )
 
     return result

@@ -67,7 +67,8 @@ def test_evaluate_structured_allows_valid_role():
     result = evaluate_structured(
         proposal=proposal,
         compiled_contract=compiled,
-        run_context=run_context
+        run_context=run_context,
+        mode="local",
     )
 
     assert result.commit_allowed is True
@@ -97,7 +98,8 @@ def test_evaluate_structured_blocks_invalid_role():
     result = evaluate_structured(
         proposal=proposal,
         compiled_contract=compiled,
-        run_context=run_context
+        run_context=run_context,
+        mode="local",
     )
 
     assert result.commit_allowed is False
@@ -160,7 +162,8 @@ def test_evaluate_structured_blocks_duplicate_identity():
     result = evaluate_structured(
         proposal=proposal,
         compiled_contract=compiled,
-        run_context=run_context
+        run_context=run_context,
+        mode="local",
     )
 
     assert result.commit_allowed is False

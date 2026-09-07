@@ -37,6 +37,33 @@ This project follows semantic versioning (0.x pre-stable).
 
 ---
 
+## Unreleased
+
+Recommended next version: **0.14.0** for the strict-default compatibility change.
+No release, version bump, tag, or package publication is included here.
+
+### Changed
+- All public evaluation paths default to strict enforcement. Advisory evaluation
+  requires an explicit `mode="local"` function argument.
+- Accept only exact `"strict"` / `"local"` strings. Invalid configuration raises
+  `ValueError` (`CRI_MODE_INVALID`); conflicting function/context declarations
+  raise `CRI_MODE_CONFLICT` before policy stages. Context cannot downgrade defaults.
+- Callers relying on omitted mode or context-only local selection must migrate;
+  advisory results must never authorize mutations. Existing policy checks remain unchanged.
+- Removed the shadowed `src/cricore/api.py` shipped alongside the canonical API
+  package; root exports now include the canonical `evaluate_structured` function.
+
+### Added
+- Preserved issue #2 baseline reproduction and regression coverage for mode
+  validation, early rejection, strict missing-evidence blocking, explicit advisory
+  behavior, import identity, deterministic policy traces, and input immutability.
+- Active PR/main CI on Python 3.10 and 3.14: complete active suite, compilation,
+  wheel/sdist builds, Twine, dependency consistency, matching module inventories,
+  and isolated clean-wheel strict/default/local smoke checks. Actions and direct
+  validation dependencies are pinned; superseded runs are cancelled. No publishing.
+
+---
+
 ## v0.13.0 2026-05-03
 
 ### Added
