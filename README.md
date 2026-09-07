@@ -3,11 +3,11 @@ title: "CRI-CORE — Deterministic Enforcement Kernel"
 filetype: "documentation"
 type: "repository-overview"
 domain: "enforcement"
-version: "0.13.0"
+version: "0.14.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-05-03"
+updated: "2026-09-07"
 
 author:
   name: "Shawn C. Wright"
@@ -29,7 +29,7 @@ ai_assisted: "partial"
 dependencies: []
 
 anchors:
-  - "CRI-CORE v0.13.0"
+  - "CRI-CORE v0.14.0"
   - "Deterministic Enforcement Kernel"
   - "Execution Boundary Enforcement"
 ---
@@ -39,6 +39,10 @@ anchors:
 </p>
 
 # CRI-CORE — Execution Boundary Enforcement Kernel
+
+**0.14.0 release candidate:** package publication and external verification are
+pending. See the [0.14.0 changelog](CHANGELOG.md#v0140-2026-09-07) for release
+notes. Python 3.10 and newer remain supported.
 
 CRI-CORE is a deterministic enforcement engine that decides whether an action is allowed to execute.
 
@@ -174,8 +178,12 @@ No hidden logic.
 * absent integrity or publication context blocks the commit decision
 * no soft failures authorize execution
 
-This selects the existing strict policy checks; it does not add evidence
-validation or change what those checks consider sufficient.
+This selects the existing strict policy checks; integrity/publication evidence
+sufficiency semantics are unchanged. Absent sections fail, but empty mappings
+still satisfy those stages. This release does **not** claim that empty
+integrity/publication mappings provide cryptographic provenance verification
+or verify published authority. [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4)
+separately tracks evidence-sufficiency semantics and is not implemented here.
 
 ### Local (explicit advisory evaluation)
 
@@ -195,7 +203,7 @@ failures do not block the advisory decision. **Advisory results must never
 authorize a mutation**, even when `commit_allowed` is `True`. If the context
 includes a mode, it must also be `"local"` for this call.
 
-### Migration (recommended CRI-CORE 0.14.0)
+### Migration to CRI-CORE 0.14.0
 
 Callers that omitted mode now receive strict enforcement. Provide the required
 context and handle blocked decisions or configuration exceptions before execution.
@@ -211,8 +219,19 @@ The same contract applies to `cricore.api.evaluate`, `run_execution_pipeline`,
 The canonical API implementation is the `cricore.api` package; the shadowed
 `src/cricore/api.py` implementation has been removed.
 
-This compatibility change is recommended for **0.14.0**. Version metadata remains
-unchanged in this PR; coordinated releases are separate work.
+Guard 0.17 remains compatible **after Guard PR #40** (verified at commit
+`2c4a77f89bb234fbde32937435535cffec4dc905`): its retained legacy permission and
+execution APIs fail closed with `GUARD_LEGACY_EXECUTION_UNSUPPORTED`. This is a
+commit-qualified compatibility statement, not a claim about an older published
+0.17 artifact that lacks PR #40. Modern Guard local/cloud/repository behavior and
+Ledger authority verification remain separate and unchanged. **Guard 0.18** will
+be the coordinated recommended Guard release.
+
+[CRI #2](https://github.com/Waveframe-Labs/CRI-CORE/issues/2) stays open until
+0.14.0 is published and externally verified.
+[Guard #39](https://github.com/Waveframe-Labs/Waveframe-Guard/issues/39) stays open
+pending CRI-CORE 0.14.0 and Guard 0.18.0 releases. This candidate preparation does
+not publish either package.
 
 ---
 

@@ -5,6 +5,7 @@ inside the isolated smoke process. Temporary environments are removed on exit.
 """
 
 import argparse
+from email.parser import BytesParser
 from pathlib import Path
 import subprocess
 import sys
@@ -20,6 +21,7 @@ import importlib
 import importlib.metadata
 import cricore
 from cricore.api import evaluate_structured
+assert cricore.__version__ == importlib.metadata.version("cricore") == "0.14.0"
 api = importlib.import_module("cricore.api")
 module = importlib.import_module("cricore.api.evaluate")
 assert Path(api.__file__).parts[-2:] == ("api", "__init__.py")
@@ -65,17 +67,26 @@ def main():
     wheels = list(args.dist_dir.glob("*.whl"))
     sdists = list(args.dist_dir.glob("*.tar.gz"))
     assert len(wheels) == len(sdists) == 1, "expected one fresh wheel and sdist"
+    assert wheels[0].name == "cricore-0.14.0-py3-none-any.whl"
+    assert sdists[0].name == "cricore-0.14.0.tar.gz"
     expected = {p.relative_to(root / "src").as_posix()
                 for p in (root / "src" / "cricore").rglob("*")
                 if p.suffix in (".py", ".json")}
     with zipfile.ZipFile(wheels[0]) as wheel:
         names = set(wheel.namelist())
+        metadata = BytesParser().parsebytes(wheel.read("cricore-0.14.0.dist-info/METADATA"))
+        assert metadata["Version"] == "0.14.0"
+        assert metadata["Requires-Python"] == ">=3.10"
         actual = {n for n in names if n.startswith("cricore/")}
         assert actual == expected, (actual - expected, expected - actual)
         assert "cricore/api.py" not in names
         assert not any(n.endswith((".pyc", ".pyo")) for n in names)
     with tarfile.open(sdists[0]) as sdist:
         names = {n.split("/", 1)[-1] for n in sdist.getnames()}
+        metadata = BytesParser().parsebytes(sdist.extractfile("cricore-0.14.0/PKG-INFO").read())
+        assert metadata["Version"] == "0.14.0"
+        assert metadata["Requires-Python"] == ">=3.10"
+        assert {"CHANGELOG.md", "citation.cff"} <= names
         actual = {n.removeprefix("src/") for n in names
                   if n.startswith("src/cricore/") and n.endswith((".py", ".json"))}
         assert actual == expected, (actual - expected, expected - actual)

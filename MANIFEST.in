@@ -1,3 +1,5 @@
 include tests/fixtures/issue2_baseline.json
 include tools/check_distribution.py
 include tools/ci-requirements.txt
+include CHANGELOG.md
+include citation.cff

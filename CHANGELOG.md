@@ -3,11 +3,11 @@ title: "CRI-CORE Changelog"
 filetype: "documentation"
 type: "log"
 domain: "enforcement"
-version: "0.13.0"
+version: "0.14.0"
 doi: "10.5281/zenodo.19080238"
 status: "Active"
 created: "2026-02-19"
-updated: "2026-05-03"
+updated: "2026-09-07"
 
 author:
   name: "Shawn C. Wright"
@@ -27,7 +27,7 @@ copyright:
 ai_assisted: "partial"
 
 anchors:
-  - "CRI-CORE-CHANGELOG-v0.13.0"
+  - "CRI-CORE-CHANGELOG-v0.14.0"
 ---
 # Changelog
 
@@ -37,10 +37,11 @@ This project follows semantic versioning (0.x pre-stable).
 
 ---
 
-## Unreleased
+## v0.14.0 2026-09-07
 
-Recommended next version: **0.14.0** for the strict-default compatibility change.
-No release, version bump, tag, or package publication is included here.
+Release candidate prepared on this date; publication and external verification
+are pending. This section is the canonical release-notes artifact. No tag,
+GitHub release, package publication, or deployment is part of this preparation.
 
 ### Changed
 - All public evaluation paths default to strict enforcement. Advisory evaluation
@@ -52,6 +53,7 @@ No release, version bump, tag, or package publication is included here.
   advisory results must never authorize mutations. Existing policy checks remain unchanged.
 - Removed the shadowed `src/cricore/api.py` shipped alongside the canonical API
   package; root exports now include the canonical `evaluate_structured` function.
+- Package, public fallback, README, and citation metadata now identify 0.14.0.
 
 ### Added
 - Preserved issue #2 baseline reproduction and regression coverage for mode
@@ -61,6 +63,27 @@ No release, version bump, tag, or package publication is included here.
   wheel/sdist builds, Twine, dependency consistency, matching module inventories,
   and isolated clean-wheel strict/default/local smoke checks. Actions and direct
   validation dependencies are pinned; superseded runs are cancelled. No publishing.
+
+### Compatibility and evidence boundary
+- Existing integrity/publication stage sufficiency semantics are unchanged:
+  absent sections fail in strict mode, while empty mappings still satisfy those
+  stages. This release does not claim that empty integrity/publication mappings
+  provide cryptographic provenance verification or verify published authority.
+  [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4) separately tracks
+  evidence-sufficiency semantics and remains open; no redesign is included.
+- Guard 0.17 remains compatible after [PR #40](https://github.com/Waveframe-Labs/Waveframe-Guard/pull/40),
+  verified at exact commit `2c4a77f89bb234fbde32937435535cffec4dc905`. Its retained
+  legacy permission/execution APIs fail closed with
+  `GUARD_LEGACY_EXECUTION_UNSUPPORTED`, before callbacks or allowed events. This
+  does not assert compatibility for a published 0.17 artifact lacking PR #40.
+  Modern Guard local/cloud/repository behavior and separate Ledger authority
+  verification are unchanged. Guard 0.18 is the coordinated recommended release.
+- [CRI #2](https://github.com/Waveframe-Labs/CRI-CORE/issues/2) remains open until
+  0.14.0 is actually published and externally verified.
+  [Guard #39](https://github.com/Waveframe-Labs/Waveframe-Guard/issues/39) remains
+  open pending CRI-CORE 0.14.0 and Guard 0.18.0 releases.
+- Runtime dependencies remain empty and the Python >=3.10 floor is unchanged.
+  No enforcement stages, schemas, contract meaning, or other components change.
 
 ---
 

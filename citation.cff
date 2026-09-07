@@ -21,6 +21,7 @@ url: "https://github.com/waveframe-labs/CRI-CORE"
 
 license: "Apache-2.0"
 
-version: "0.13.0"
+version: "0.14.0"
 
-date-released: "2026-05-03"
+# Candidate release date; publication and external verification remain pending.
+date-released: "2026-09-07"

@@ -8,7 +8,7 @@ from importlib.metadata import version, PackageNotFoundError
 try:
     __version__ = version("cricore")
 except PackageNotFoundError:
-    __version__ = "0.10.0"
+    __version__ = "0.14.0"
 
 
 # Public API surface
