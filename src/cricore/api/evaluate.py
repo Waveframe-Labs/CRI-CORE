@@ -54,11 +54,14 @@ def evaluate(
     run_path: str,
     *,
     run_context: dict,
+    mode: str = "strict",
     expected_contract_version: Optional[str] = None,
 ) -> EvaluationResult:
+    """Evaluate a run strictly by default; mode="local" is advisory only."""
     results, commit_allowed = run_enforcement_pipeline(
         run_path,
         run_context=run_context,
+        mode=mode,
         expected_contract_version=expected_contract_version,
     )
 
@@ -83,13 +86,15 @@ def evaluate_structured(
     proposal: Dict[str, Any],
     compiled_contract: Dict[str, Any],
     run_context: Dict[str, Any],
-    mode: Optional[str] = None,
+    mode: str = "strict",
     expected_contract_version: Optional[str] = None,
 ):
     """
-    Structured evaluation entrypoint.
+    Canonical strict-by-default enforcement entrypoint.
 
     Evaluates a proposal directly without relying on filesystem-based run_path.
+    Explicit mode="local" is advisory and must never authorize a mutation.
+    Invalid or conflicting modes raise ValueError before policy evaluation.
     """
 
     return run_execution_pipeline(

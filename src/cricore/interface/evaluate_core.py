@@ -1,13 +1,14 @@
 from typing import Any, Dict
 
 from cricore.api import evaluate_structured
+from cricore.enforcement.mode import resolve_mode
 
 
 def evaluate_core(
     proposal: Dict[str, Any],
     compiled_contract: Dict[str, Any],
     run_context: Dict[str, Any],
-    mode: str = "local",
+    mode: str = "strict",
 ) -> Any:
     """
     Pure CRI-CORE evaluation interface.
@@ -16,6 +17,7 @@ def evaluate_core(
     without filesystem or simulation scaffolding.
     """
 
+    resolve_mode(mode, run_context)
     # Ensure contract hash is bound
     if "contract" not in proposal:
         raise ValueError("proposal must include 'contract' field")

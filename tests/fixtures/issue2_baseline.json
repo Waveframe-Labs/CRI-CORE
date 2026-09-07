@@ -1,0 +1,258 @@
+{
+  "inputs": {
+    "proposal": {
+      "proposal_id": "omitted-mode-reproduction",
+      "contract": {
+        "id": "test",
+        "version": "1.0.0",
+        "hash": "test-hash"
+      }
+    },
+    "compiled_contract": {
+      "contract_id": "test",
+      "contract_version": "1.0.0",
+      "contract_hash": "test-hash"
+    },
+    "run_context": {
+      "identities": {
+        "actors": [
+          {
+            "id": "user-1",
+            "type": "human",
+            "role": "manager"
+          }
+        ],
+        "required_roles": [
+          "manager"
+        ]
+      }
+    }
+  },
+  "results": {
+    "omitted": {
+      "commit_allowed": true,
+      "failed_stages": [],
+      "trace": [
+        {
+          "stage_id": "run-structure",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "structure-contract-version-gate",
+          "passed": true,
+          "messages": [
+            "skipped: no expected_contract_version provided"
+          ]
+        },
+        {
+          "stage_id": "structure-contract-hash-gate",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "independence",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "integrity",
+          "passed": true,
+          "messages": [
+            "integrity section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "integrity-finalization",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "publication",
+          "passed": true,
+          "messages": [
+            "publication section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "publication-commit",
+          "passed": true,
+          "messages": []
+        }
+      ]
+    },
+    "strict": {
+      "commit_allowed": false,
+      "failed_stages": [
+        "integrity",
+        "integrity-finalization",
+        "publication",
+        "publication-commit"
+      ],
+      "trace": [
+        {
+          "stage_id": "run-structure",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "structure-contract-version-gate",
+          "passed": true,
+          "messages": [
+            "skipped: no expected_contract_version provided"
+          ]
+        },
+        {
+          "stage_id": "structure-contract-hash-gate",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "independence",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "integrity",
+          "passed": false,
+          "messages": [
+            "integrity section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "integrity-finalization",
+          "passed": false,
+          "messages": [
+            "blocked: integrity stage did not pass"
+          ]
+        },
+        {
+          "stage_id": "publication",
+          "passed": false,
+          "messages": [
+            "publication section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "publication-commit",
+          "passed": false,
+          "messages": [
+            "Commit blocked. Prior stages failed: integrity, integrity-finalization, publication"
+          ]
+        }
+      ]
+    },
+    "local": {
+      "commit_allowed": true,
+      "failed_stages": [],
+      "trace": [
+        {
+          "stage_id": "run-structure",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "structure-contract-version-gate",
+          "passed": true,
+          "messages": [
+            "skipped: no expected_contract_version provided"
+          ]
+        },
+        {
+          "stage_id": "structure-contract-hash-gate",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "independence",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "integrity",
+          "passed": true,
+          "messages": [
+            "integrity section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "integrity-finalization",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "publication",
+          "passed": true,
+          "messages": [
+            "publication section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "publication-commit",
+          "passed": true,
+          "messages": []
+        }
+      ]
+    },
+    "unknown": {
+      "commit_allowed": true,
+      "failed_stages": [
+        "integrity",
+        "publication"
+      ],
+      "trace": [
+        {
+          "stage_id": "run-structure",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "structure-contract-version-gate",
+          "passed": true,
+          "messages": [
+            "skipped: no expected_contract_version provided"
+          ]
+        },
+        {
+          "stage_id": "structure-contract-hash-gate",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "independence",
+          "passed": true,
+          "messages": []
+        },
+        {
+          "stage_id": "integrity",
+          "passed": false,
+          "messages": [
+            "integrity section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "integrity-finalization",
+          "passed": true,
+          "messages": [
+            "skipped: integrity incomplete (local mode)"
+          ]
+        },
+        {
+          "stage_id": "publication",
+          "passed": false,
+          "messages": [
+            "publication section missing from run_context"
+          ]
+        },
+        {
+          "stage_id": "publication-commit",
+          "passed": true,
+          "messages": [
+            "Commit allowed in local mode with soft failures: integrity, publication"
+          ]
+        }
+      ]
+    }
+  },
+  "base": "28bc5636e4edadc6442cb003cb91df091286cb05"
+}

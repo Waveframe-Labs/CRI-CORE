@@ -47,10 +47,8 @@ from typing import Any, Mapping, Optional
 
 from ..errors import FailureClass
 from ..results.stage import StageResult
+from .mode import resolve_mode
 
-
-def _is_local_mode(run_context: Optional[Mapping[str, Any]]) -> bool:
-    return isinstance(run_context, Mapping) and run_context.get("mode") == "local"
 
 
 # ---------------------------------------------------------------------
@@ -63,6 +61,7 @@ def run_integrity_stage(
     proposal: Mapping[str, Any],
     compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,
+    mode: str = "strict",
 ) -> StageResult:
     """
     Structural + cryptographic integrity verification.
@@ -80,7 +79,7 @@ def run_integrity_stage(
     # --- Structural run_context validation ---
 
     integrity = None
-    local_mode = _is_local_mode(run_context)
+    local_mode = resolve_mode(mode, run_context) == "local"
 
     if not run_context or not isinstance(run_context, Mapping):
         messages.append("run_context is missing or not a mapping")
@@ -124,10 +123,9 @@ def run_integrity_finalization_stage(
     compiled_contract: Mapping[str, Any],
     run_context: Optional[Mapping[str, Any]] = None,  # accepted for interface symmetry
     prerequisite_passed: bool = True,
+    mode: str = "strict",
 ) -> StageResult:
-    mode = "local"
-    if isinstance(run_context, Mapping):
-        mode = run_context.get("mode", "local")
+    mode = resolve_mode(mode, run_context)
 
     if not prerequisite_passed:
         if mode != "strict":

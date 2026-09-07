@@ -24,7 +24,7 @@ def _compiled_contract():
     )
 
 
-def _run_context(mode="local"):
+def _run_context(mode="strict"):
     return {
         "mode": mode,
         "identities": {
@@ -105,7 +105,7 @@ def test_evaluate_proposal_hash_mismatch_blocks_without_mutation():
     assert proposal == original
 
 
-def test_run_context_mode_is_preserved_when_mode_argument_omitted():
+def test_matching_strict_context_is_accepted_when_mode_argument_omitted():
     compiled = _compiled_contract()
     strict_context = {
         "mode": "strict",
