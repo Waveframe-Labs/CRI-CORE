@@ -1,0 +1,10 @@
+# Direct validation dependencies, shared by both supported CI runtimes.
+pip==26.2.1
+setuptools==83.0.0
+wheel==0.48.0
+build==1.6.0
+twine==6.2.0
+pytest==9.1.1
+jsonschema==4.26.0
+cricore-contract-compiler==0.4.0
+cricore-proposal-normalizer==0.2.0
