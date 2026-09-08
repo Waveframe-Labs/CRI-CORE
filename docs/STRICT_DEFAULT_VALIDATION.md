@@ -1,5 +1,11 @@
 # Strict-default correction: issues #1 and #2
 
+Historical validation record for PR #3, before release preparation. PR #3 merged
+as `fb0ba5b1f4025a4b363f173c356e98c427a96a9b`; issue #1 subsequently closed after
+main CI passed. The [0.14.0 release notes](../CHANGELOG.md#v0140-2026-09-07)
+describe the current candidate. Issue #2 stays open until publication and external
+verification; issue #4 tracks unchanged evidence-sufficiency limitations.
+
 ## Baseline and public surface inventory
 
 Before editing, `git fetch origin` succeeded and both `origin/main` and branch
@@ -158,6 +164,7 @@ execution, `GovernedRuntime`/`GuardRuntime` execute/execute_proposal/evaluate/
 revalidate, and `evaluate_admissibility`, with no CRI evaluation, authority
 resolution, callback, allowed event, or successful execution evidence.
 
-Compatibility evidence is also posted to Guard issue #39. That issue and CRI
-issues #1/#2 remain open. Recommend CRI-CORE **0.14.0**, coordinated with Guard's
-planned **0.18.0**; release/version/tag publication is separate work.
+At the time of this PR #3 validation, compatibility evidence was posted to Guard
+issue #39, and Guard #39 and CRI #1/#2 remained open. The recommendation was
+CRI-CORE **0.14.0**, coordinated with Guard **0.18.0**. See the update above for
+subsequent issue status and candidate release notes.

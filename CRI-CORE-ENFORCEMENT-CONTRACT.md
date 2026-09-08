@@ -27,6 +27,18 @@ anchors:
 
 # CRI-CORE Enforcement Contract (v0.12.0)
 
+> **0.14.0 applicability:** this independently versioned contract is retained
+> as a historical specification; its version and contract meaning are unchanged.
+> Current public API use follows the [0.14.0 release notes](CHANGELOG.md#v0140-2026-09-07):
+> strict by default, advisory only with explicit `mode="local"`. Invalid or
+> conflicting modes fail before policy stages; context cannot downgrade strict.
+> Advisory `commit_allowed` results must never authorize mutation. Existing
+> integrity/publication stages still accept empty mappings; this is not a claim
+> of cryptographic provenance or published-authority verification. Historical
+> artifact/finalization descriptions below must not be read as guarantees of
+> the current structured pipeline. [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4)
+> separately tracks evidence sufficiency; no stage or contract redesign is included.
+
 ## 1. Scope
 
 CRI-CORE is a deterministic enforcement kernel that determines whether a proposed state mutation is allowed to execute.

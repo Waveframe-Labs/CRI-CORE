@@ -12,6 +12,17 @@ license: "Apache-2.0"
 
 # Canonical Enforcement Stage Order
 
+> **0.14.0 applicability:** stage order is unchanged. The artifact-writing and
+> verification descriptions below are historical and do not describe the current
+> structured pipeline's evidence guarantees. See the
+> [0.14.0 release notes](../CHANGELOG.md#v0140-2026-09-07). Public evaluation defaults
+> to strict; invalid/conflicting mode declarations reject before stages and context
+> cannot downgrade strict. Explicit `mode="local"` is advisory, and its
+> `commit_allowed` must never authorize mutation. Empty integrity/publication
+> mappings still satisfy existing stages; they do not establish cryptographic
+> provenance or verified published authority. [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4)
+> tracks evidence sufficiency separately. No stage semantics are changed here.
+
 The CRI-CORE enforcement pipeline executes the following stages in fixed, deterministic order:
 
 1. run-structure  

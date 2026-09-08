@@ -35,6 +35,17 @@ anchors:
 
 # CRI-CORE Run Context Contract
 
+> **0.14.0 applicability:** this contract's independent version and field meanings
+> are unchanged. In current public evaluation, strict is the default and missing
+> integrity/publication sections block. Explicit `mode="local"` is advisory;
+> advisory `commit_allowed` must never authorize mutation. An optional context
+> `mode` must match the function mode (default `"strict"`); invalid/conflicting
+> declarations fail before policy stages and cannot silently downgrade strict.
+> Empty integrity/publication mappings remain sufficient for the existing stages,
+> without a claim of cryptographic provenance or published-authority verification.
+> See [release notes](../CHANGELOG.md#v0140-2026-09-07) and the separate
+> [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4) sufficiency follow-up.
+
 ## 1. Purpose
 
 This document defines the **run context contract** supplied to CRI-CORE at the execution boundary.

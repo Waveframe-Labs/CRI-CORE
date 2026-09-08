@@ -33,6 +33,16 @@ anchors:
 
 # CRI-CORE Kernel Invariants
 
+> **0.14.0 applicability:** this versioned specification retains historical
+> artifact-integrity descriptions. For current public evaluation, consult the
+> [0.14.0 release notes](../CHANGELOG.md#v0140-2026-09-07): strict is the default;
+> explicit `mode="local"` is advisory and its `commit_allowed` must never
+> authorize mutation. Invalid/conflicting modes reject before stages and context
+> cannot downgrade strict. Existing integrity/publication sufficiency is unchanged:
+> empty mappings pass those stages, without cryptographic provenance or
+> published-authority verification. [CRI #4](https://github.com/Waveframe-Labs/CRI-CORE/issues/4)
+> tracks that separate decision. The historical specification version is unchanged.
+
 This document defines the structural guarantees provided by the CRI-CORE enforcement kernel at the execution boundary.
 
 Kernel invariants describe properties that must hold whenever CRI-CORE produces a commit authorization decision.
